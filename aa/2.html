@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>게임 프런트</title>
+</head>
+<body>
+  <h1>게임 페이지</h1>
+  <p id="status">플랫폼에서 전달된 데이터를 확인 중...</p>
+
+  <script>
+    // 플랫폼 로그인 처리 (실제로는 Supabase나 API 호출 로직)
+    function handlePlatformLogin(uid, accessToken, refreshToken, nickname) {
+      document.getElementById('status').innerText =
+        `로그인 성공! UID: ${uid}, 닉네임: ${nickname}`;
+      console.log("Supabase 로그인 시도:", { uid, accessToken, refreshToken, nickname });
+      // TODO: supabase.auth.setSession({ access_token, refresh_token }) 같은 코드 추가
+    }
+
+    // 폼 POST 데이터를 감지해서 꺼내오기
+    function checkFormData() {
+      if (document.forms.length > 0) {
+        const form = document.forms[0];
+        const formData = new FormData(form);
+        const uid = formData.get("uid");
+        const accessToken = formData.get("access_token");
+        const refreshToken = formData.get("refresh_token");
+        const nickname = formData.get("nickname");
+
+        if (uid && accessToken && refreshToken && nickname) {
+          handlePlatformLogin(uid, accessToken, refreshToken, nickname);
+        } else {
+          document.getElementById('status').innerText =
+            "플랫폼 데이터가 없습니다.";
+        }
+      } else {
+        document.getElementById('status').innerText =
+          "폼 데이터 없음 (직접 접근?)";
+      }
+    }
+
+    // 페이지 로드 시 실행
+    window.onload = checkFormData;
+  </script>
+</body>
+</html>
