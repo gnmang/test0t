@@ -2,16 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>플랫폼 페이지 1</title>
+  <title>플랫폼 페이지</title>
   <script>
-    export function postToGameServer(
+    function postToGameServer(
       url,
       { uid, nickname, access_token, refresh_token }
     ) {
-      // 새 창에서 게임 서버 열기
+      // 새 창 열기
       const gameWindow = window.open(url, "_blank");
 
-      // 게임 창이 로드된 후 데이터 전송
+      // 게임 창 로드 기다렸다가 데이터 전송
       setTimeout(() => {
         if (gameWindow && !gameWindow.closed) {
           gameWindow.postMessage(
@@ -22,25 +22,24 @@
               access_token,
               refresh_token,
             },
-            "*" // 테스트용: 어떤 origin이든 허용 (실서비스는 게임서버 주소로 제한해야 안전)
-            // url // targetOrigin (게임 주소)
+            "*" // 보안상은 게임 페이지의 origin으로 제한하는 게 안전
           );
         }
-      }, 2000); // 2초 대기 (로드 시간 고려)
+      }, 2000);
     }
 
     function handleClick() {
-      postToGameServer("https://gnmang.github.io/test0t/aa/p1_recv.html", {
+      postToGameServer("game.html", {
         uid: "user-123",
         nickname: "지닝",
         access_token: "access-xxx",
-        refresh_token: "refresh-yyy"
+        refresh_token: "refresh-yyy",
       });
     }
   </script>
 </head>
 <body>
-  <h1>플랫폼 페이지</h1>
+  <h1>플랫폼 페이지 3</h1>
   <button onclick="handleClick()">게임 시작</button>
 </body>
 </html>
