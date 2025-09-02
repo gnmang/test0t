@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>플랫폼 페이지</title>
+  <script>
+    export function postToGameServer(
+      url,
+      { uid, nickname, access_token, refresh_token }
+    ) {
+      // 새 창에서 게임 서버 열기
+      const gameWindow = window.open(url, "_blank");
+
+      // 게임 창이 로드된 후 데이터 전송
+      setTimeout(() => {
+        if (gameWindow && !gameWindow.closed) {
+          gameWindow.postMessage(
+            {
+              type: "PLATFORM_LOGIN_DATA",
+              uid,
+              nickname,
+              access_token,
+              refresh_token,
+            },
+            url // targetOrigin (게임 주소)
+          );
+        }
+      }, 2000); // 2초 대기 (로드 시간 고려)
+    }
+
+    function handleClick() {
+      postToGameServer("https://gnmang.github.io/test0t/aa/p1_recv.html", {
+        uid: "user-123",
+        nickname: "지닝",
+        access_token: "access-xxx",
+        refresh_token: "refresh-yyy"
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1>플랫폼 페이지</h1>
+  <button onclick="handleClick()">게임 시작</button>
+</body>
+</html>
