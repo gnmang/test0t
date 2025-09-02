@@ -22,7 +22,8 @@
               access_token,
               refresh_token,
             },
-            url // targetOrigin (게임 주소)
+            "*" // 테스트용: 어떤 origin이든 허용 (실서비스는 게임서버 주소로 제한해야 안전)
+            // url // targetOrigin (게임 주소)
           );
         }
       }, 2000); // 2초 대기 (로드 시간 고려)
