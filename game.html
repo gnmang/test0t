@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>게임 페이지</title>
+  <script>
+    // 플랫폼에서 전달되는 데이터를 수신
+    window.addEventListener("message", (event) => {
+      // 보안상 event.origin 체크 권장 (여기선 간단히 생략 가능)
+      console.log("받은 데이터:", event.data);
+
+      if (event.data.type === "PLATFORM_LOGIN_DATA") {
+        document.getElementById("output").textContent =
+          JSON.stringify(event.data, null, 2);
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>게임 페이지</h1>
+  <pre id="output">대기중...</pre>
+</body>
+</html>
