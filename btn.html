@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임 서버 실행기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .launch-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .launch-btn:hover {
+            background-color: #45a049;
+        }
+        .info {
+            margin-bottom: 30px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>게임 서버 실행기</h1>
+        <div class="info">
+            <p>사용자: r1</p>
+            <p>게임 서버로 연결됩니다</p>
+        </div>
+        <button class="launch-btn" onclick="launchGame()">게임 시작하기</button>
+    </div>
+
+    <script>
+        // postToGameServer 함수 정의
+        function postToGameServer(url, { uid, nickname, access_token, refresh_token }) {
+            // 새 창에서 게임 서버 열기
+            const gameWindow = window.open(url, "_blank");
+
+            // 게임 창이 로드된 후 데이터 전송
+            setTimeout(() => {
+                if (gameWindow && !gameWindow.closed) {
+                    // postMessage로 데이터 전송
+                    gameWindow.postMessage(
+                        {
+                            type: "PLATFORM_LOGIN_DATA",
+                            uid,
+                            nickname,
+                            access_token,
+                            refresh_token,
+                        },
+                        url
+                    );
+                }
+            }, 2000); // 2초 대기
+        }
+
+        // 게임 실행 함수
+        function launchGame() {
+            const gameData = {
+                uid: "aebf1b00-a7b8-4468-8be0-5063a4b306df",
+                nickname: "r1",
+                access_token: "eyJhbGciOiJIUzI1NiIsImtpZCI6InYxRnYweUdwYkJTeVRmczMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FxbmpucGFpd3ZpY3VudGl3bXp0LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJhZWJmMWIwMC1hN2I4LTQ0NjgtOGJlMC01MDYzYTRiMzA2ZGYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU3NzUyNDM2LCJpYXQiOjE3NTczOTI0MzYsImVtYWlsIjoicjFAZ2FtZS5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1NzM5MjQzNn1dLCJzZXNzaW9uX2lkIjoiMDNlMDM3OGYtNzZjYy00MDE4LWEyNGEtOGZmYWI3NWY5NjUyIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.gg8C-0WJ3njSlkk6CX-exyWjmVKdtRzKWnZSRIdpotE",
+                refresh_token: "3x6r2j2vjy5j"
+            };
+
+            const gameUrl = "https://gnmang.github.io/test0t/game.html";
+
+            // 게임 서버로 데이터 전송
+            postToGameServer(gameUrl, gameData);
+        }
+    </script>
+</body>
+</html>

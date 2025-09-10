@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Last to blast</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Press Start 2P', cursive;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
+
+    body {
+      background: linear-gradient(180deg, #87CEEB 0%, #98D8C8 50%, #F7DC6F 100%);
+      position: relative;
+    }
+
+    /* 픽셀화된 구름 효과 */
+    .pixel-clouds {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.6;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 0;
+      animation: float-clouds 20s infinite linear;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+    }
+
+    .cloud1 {
+      width: 60px;
+      height: 20px;
+      top: 20%;
+      animation-duration: 25s;
+    }
+
+    .cloud1::before {
+      top: -10px;
+      left: 10px;
+      width: 30px;
+      height: 20px;
+    }
+
+    .cloud1::after {
+      top: -5px;
+      right: 15px;
+      width: 20px;
+      height: 15px;
+    }
+
+    .cloud2 {
+      width: 80px;
+      height: 25px;
+      top: 40%;
+      animation-duration: 30s;
+      animation-delay: -10s;
+    }
+
+    .cloud2::before {
+      top: -12px;
+      left: 15px;
+      width: 35px;
+      height: 25px;
+    }
+
+    .cloud2::after {
+      top: -8px;
+      right: 20px;
+      width: 25px;
+      height: 18px;
+    }
+
+    @keyframes float-clouds {
+      0% { transform: translateX(-100px); }
+      100% { transform: translateX(calc(100vw + 100px)); }
+    }
+
+    /* 픽셀 파티클 */
+    .pixel-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .pixel-particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #FFD700;
+      animation: fall 8s infinite linear;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    #unity-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      background: transparent;
+    }
+
+    /* 픽셀 스타일 로딩 화면 */
+    #loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #87CEEB 0%, #98D8C8 50%, #F7DC6F 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      transition: opacity 1s ease-out;
+    }
+
+    /* 게임 로고 영역 */
+    .game-logo {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: pixel-bounce 2s ease-in-out infinite;
+    }
+
+    .game-image {
+      width: 300px;
+      height: 200px;
+      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPCEtLSBiYWNrZ3JvdW5kIC0tPgogIDxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjODdDRUVCIi8+CiAgCiAgPCEtLSBidWlsZGluZ3MgLS0+CiAgPHJlY3QgeD0iMjAiIHk9IjEyMCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjdEQzZGIi8+CiAgPHJlY3QgeD0iMjQwIiB5PSI4MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iI0Y3REM2RiIvPgogIDxyZWN0IHg9IjgwIiB5PSIxMDAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGRkE1MDAiLz4KICAKICA8IS0tIG1haW4gY2hhcmFjdGVyIC0tPgogIDxyZWN0IHg9IjEyNSIgeT0iMTQwIiB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIGZpbGw9IiM4QjQ1MTMiLz4KICA8cmVjdCB4PSIxMTkiIHk9IjEyOCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjEyIiBmaWxsPSIjRkZEQjk5Ii8+CiAgPHJlY3QgeD0iMTI4IiB5PSIxMTYiIHdpZHRoPSI2IiBoZWlnaHQ9IjEyIiBmaWxsPSIjRkZEQjk5Ii8+CiAgPHJlY3QgeD0iMTMxIiB5PSIxMDQiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMiIgZmlsbD0iI0ZGRDcwMCIvPgogIDxyZWN0IHg9IjExNiIgeT0iMTUyIiB3aWR0aD0iMzAiIGhlaWdodD0iMTgiIGZpbGw9IiMzMzMiLz4KICA8cmVjdCB4PSIxMTMiIHk9IjE3MCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjE4IiBmaWxsPSIjOEI0NTEzIi8+CiAgPHJlY3QgeD0iMTM3IiB5PSIxNzAiIHdpZHRoPSIxMiIgaGVpZ2h0PSIxOCIgZmlsbD0iIzhCNDUxMyIvPgogIDxyZWN0IHg9IjEzNCIgeT0iMTM0IiB3aWR0aD0iMTgiIGhlaWdodD0iNiIgZmlsbD0iIzMzMyIvPgogIDx5ZWxsb3cgY2hhcmFjdGVyICh3aXRoIGJvbWIpIC0tPgogIDwhLS0gYm9tYiAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjE2IiBmaWxsPSIjMzMzIi8+CiAgPHJlY3QgeD0iMTAwIiB5PSI4NCIgd2lkdGg9IjQiIGhlaWdodD0iMTYiIGZpbGw9IiNGRkQ3MDAiLz4KICA8Y2lyY2xlIGN4PSIxMDIiIGN5PSI4NiIgcj0iMyIgZmlsbD0iI0ZGNTcyMiIvPgogICAgCiAgPCEtLSBvdGhlciBjaGFyYWN0ZXJzIC0tPgogIDxyZWN0IHg9IjIwMCIgeT0iMTYwIiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjOEI0NTEzIi8+CiAgPHJlY3QgeD0iMTk2IiB5PSIxNTIiIHdpZHRoPSIxNiIgaGVpZ2h0PSI4IiBmaWxsPSIjRkZEQjk5Ii8+CiAgPHJlY3QgeD0iMjAwIiB5PSIxNDQiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiM0MTY5RTEiLz4KICA8cmVjdCB4PSIxOTQiIHk9IjE2OCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEyIiBmaWxsPSIjNDE2OUUxIi8+CiAgPHJlY3QgeD0iMTkyIiB5PSIxODAiIHdpZHRoPSI4IiBoZWlnaHQ9IjEyIiBmaWxsPSIjOEI0NTEzIi8+CiAgPHJlY3QgeD0iMjA4IiB5PSIxODAiIHdpZHRoPSI4IiBoZWlnaHQ9IjEyIiBmaWxsPSIjOEI0NTEzIi8+CiAgCiAgPCEtLSBzbWFsbCBjaGFyYWN0ZXJzIC0tPgogIDxyZWN0IHg9IjI1MCIgeT0iMTcwIiB3aWR0aD0iNiIgaGVpZ2h0PSI2IiBmaWxsPSIjOEI0NTEzIi8+CiAgPHJlY3QgeD0iMjQ4IiB5PSIxNjQiIHdpZHRoPSIxMCIgaGVpZ2h0PSI2IiBmaWxsPSIjRkZEQjk5Ii8+CiAgPHJlY3QgeD0iMjUwIiB5PSIxNTgiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIGZpbGw9IiNFOTE5N0MiLz4KICA8cmVjdCB4PSIyNDYiIHk9IjE3NiIgd2lkdGg9IjE0IiBoZWlnaHQ9IjgiIGZpbGw9IiNFOTE5N0MiLz4KICA8cmVjdCB4PSIyNDQiIHk9IjE4NCIgd2lkdGg9IjYiIGhlaWdodD0iOCIgZmlsbD0iIzhCNDUxMyIvPgogIDxyZWN0IHg9IjI1NiIgeT0iMTg0IiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiBmaWxsPSIjOEI0NTEzIi8+CiAgCiAgPCEtLSBncm91bmQgLS0+CiAgPHJlY3QgeD0iMCIgeT0iMTkwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjNjY4QjNEIi8+Cjwvc3ZnPgo=') no-repeat center;
+      background-size: contain;
+      margin-bottom: 20px;
+      border: 4px solid #333;
+      box-shadow: 8px 8px 0px #000;
+      image-rendering: pixelated;
+    }
+
+    .game-title {
+      font-size: 2.5rem;
+      color: #333;
+      text-shadow: 
+        4px 4px 0px #FFF,
+        8px 8px 0px #FFD700;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+      line-height: 1.2;
+    }
+
+    .game-subtitle {
+      font-size: 0.8rem;
+      color: #E91E63;
+      text-shadow: 2px 2px 0px #FFF;
+      letter-spacing: 1px;
+    }
+
+    @keyframes pixel-bounce {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 픽셀 스타일 로딩 바 */
+    .loading-section {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .loading-text {
+      color: #333;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 0px #FFF;
+      letter-spacing: 1px;
+    }
+
+    #unity-loading-bar {
+      width: 100%;
+      height: 24px;
+      background: #FFF;
+      border: 4px solid #333;
+      box-shadow: 4px 4px 0px #000;
+      margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #unity-progress-bar-full {
+      width: 0%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        #4CAF50 0px,
+        #4CAF50 8px,
+        #66BB6A 8px,
+        #66BB6A 16px
+      );
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    #unity-progress-bar-full::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 4px,
+        rgba(255,255,255,0.3) 4px,
+        rgba(255,255,255,0.3) 8px
+      );
+      animation: pixel-shimmer 1s infinite linear;
+    }
+
+    @keyframes pixel-shimmer {
+      0% { transform: translateX(-16px); }
+      100% { transform: translateX(16px); }
+    }
+
+    .loading-percentage {
+      color: #333;
+      font-size: 1rem;
+      text-shadow: 1px 1px 0px #FFF;
+    }
+
+    /* 픽셀 스타일 경고 배너 */
+    #unity-warning {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #333;
+      z-index: 15;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.7rem;
+    }
+
+    #unity-warning > div {
+      background: #FFF !important;
+      border: 2px solid #333 !important;
+      box-shadow: 4px 4px 0px #000 !important;
+      color: #333 !important;
+      padding: 8px !important;
+      margin-bottom: 8px !important;
+      border-radius: 0 !important;
+    }
+
+    /* 모바일 대응 */
+    @media (max-width: 768px) {
+      .game-image {
+        width: 250px;
+        height: 166px;
+      }
+      
+      .game-title {
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+      }
+      
+      .game-subtitle {
+        font-size: 0.7rem;
+      }
+      
+      .loading-section {
+        max-width: 90%;
+      }
+      
+      .game-logo {
+        margin-bottom: 30px;
+      }
+      
+      .loading-text {
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .game-image {
+        width: 200px;
+        height: 133px;
+      }
+      
+      .game-title {
+        font-size: 1.4rem;
+      }
+      
+      .game-subtitle {
+        font-size: 0.6rem;
+      }
+    }
+
+    /* 게임 시작 후 숨김 */
+    .loaded #loading-overlay {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 픽셀 구름 효과 -->
+  <div class="pixel-clouds">
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+  </div>
+  
+  <!-- 픽셀 파티클 -->
+  <div class="pixel-particles" id="particles"></div>
+  
+  <div id="unity-container">
+    <canvas id="unity-canvas"></canvas>
+    
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay">
+      <div class="game-logo">
+        <div class="game-image"></div>
+        <h1 class="game-title">LAST TO BLAST</h1>
+        <p class="game-subtitle">PIXEL BATTLE ROYALE</p>
+      </div>
+      
+      <div class="loading-section">
+        <div class="loading-text">LOADING GAME...</div>
+        <div id="unity-loading-bar">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+        <div class="loading-percentage">0%</div>
+      </div>
+    </div>
+    
+    <div id="unity-warning"></div>
+  </div>
+
+  <script>
+    // 픽셀 파티클 생성
+    function createPixelParticles() {
+      const particlesContainer = document.getElementById('particles');
+      
+      setInterval(() => {
+        const particle = document.createElement('div');
+        particle.className = 'pixel-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+        particle.style.animationDelay = Math.random() * 2 + 's';
+        
+        // 랜덤 색상
+        const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        
+        particlesContainer.appendChild(particle);
+        
+        setTimeout(() => {
+          if (particle.parentNode) {
+            particle.parentNode.removeChild(particle);
+          }
+        }, 8000);
+      }, 800);
+    }
+
+    createPixelParticles();
+
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingOverlay = document.querySelector("#loading-overlay");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var loadingPercentage = document.querySelector(".loading-percentage");
+    var warningBanner = document.querySelector("#unity-warning");
+
+    function unityShowBanner(msg, type) {
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type != 'error') {
+        setTimeout(function () {
+          if (div.parentNode) {
+            warningBanner.removeChild(div);
+          }
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/7e80858eaf17ebb4137026f1525a0bf8.loader.js";
+    var config = {
+        dataUrl: buildUrl + "/1ac3118f472247c5a14657cc690d4746.data",
+        frameworkUrl: buildUrl + "/6fb218dce750657915db35ab8c305fbd.framework.js",
+        codeUrl: buildUrl + "/c6e0a8f81d07c329a4171f4ebd936775.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "demo",
+      productName: "Last to blast",
+      productVersion: "1.0.0.0",
+      showBanner: unityShowBanner
+    };
+
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        const percentage = Math.round(100 * progress);
+        progressBarFull.style.width = percentage + "%";
+        loadingPercentage.textContent = percentage + "%";
+      }).then((unityInstance) => {
+        // 로딩 완료 후 오버레이 숨김
+        document.body.classList.add('loaded');
+      }).catch((message) => {
+        alert(message);
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
