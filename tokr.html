@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTC 시간 변환기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 10px;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .result-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .result-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .result-time {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .copy-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: rgba(0, 255, 0, 0.3);
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .example {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #667eea;
+            border-left: 4px solid #667eea;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .result-time {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 UTC 시간 변환기</h1>
+        
+        <div class="input-group">
+            <label for="utcTime">UTC 시간 입력</label>
+            <input type="text" 
+                   id="utcTime" 
+                   placeholder="2025-09-11T00:07:37.958Z" 
+                   autocomplete="off">
+        </div>
+
+        <div class="example">
+            💡 입력 예시: 2025-09-11T00:07:37.958Z
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const utcInput = document.getElementById('utcTime');
+        const resultDiv = document.getElementById('result');
+
+        function convertTime() {
+            const utcString = utcInput.value.trim();
+            
+            if (!utcString) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            try {
+                // UTC 시간을 Date 객체로 변환
+                const utcDate = new Date(utcString);
+                
+                // 유효한 날짜인지 확인
+                if (isNaN(utcDate.getTime())) {
+                    throw new Error('유효하지 않은 날짜 형식입니다.');
+                }
+
+                // 현재 시간대로 변환
+                const localTime = utcDate.toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short'
+                });
+
+                // ISO 형식의 현지 시간
+                const isoLocalTime = new Date(utcDate.getTime() - (utcDate.getTimezoneOffset() * 60000))
+                    .toISOString().slice(0, -1);
+
+                resultDiv.innerHTML = `
+                    <div class="result-section">
+                        <div class="result-label">현재 나라 시간</div>
+                        <div class="result-time" id="localTime">${localTime}</div>
+                        <div class="copy-section">
+                            <button class="copy-btn" onclick="copyTime('${localTime}')">
+                                📋 한국어 형식 복사
+                            </button>
+                            <button class="copy-btn" onclick="copyTime('${isoLocalTime}')">
+                                📋 ISO 형식 복사
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ ${error.message}<br>
+                        올바른 UTC 시간 형식을 입력해주세요. (예: 2025-09-11T00:07:37.958Z)
+                    </div>
+                `;
+            }
+        }
+
+        function copyTime(timeString) {
+            navigator.clipboard.writeText(timeString).then(() => {
+                // 복사 성공 피드백
+                const buttons = document.querySelectorAll('.copy-btn');
+                buttons.forEach(btn => {
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ 복사완료!';
+                    btn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            }).catch(() => {
+                alert('복사에 실패했습니다.');
+            });
+        }
+
+        // 실시간 변환
+        utcInput.addEventListener('input', convertTime);
+        utcInput.addEventListener('paste', () => {
+            setTimeout(convertTime, 10);
+        });
+
+        // 페이지 로드 시 현재 시간을 예시로 표시
+        window.addEventListener('load', () => {
+            const now = new Date();
+            utcInput.value = now.toISOString();
+            convertTime();
+        });
+    </script>
+</body>
+</html>
