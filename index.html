@@ -92,11 +92,11 @@
     }
 
     var buildUrl = "Build";
-    var loaderUrl = buildUrl + "/2bb5ffcc96d0f8819691966622e0a46c.loader.js";
+    var loaderUrl = buildUrl + "/3f3f096899ca69cd352a0894315c28ac.loader.js";
     var config = {
-        dataUrl: buildUrl + "/7e30d7984a026f16143f184343ca915f.data",
+        dataUrl: buildUrl + "/97866e64ba34efcba41e1cbf5cbb26ad.data",
         frameworkUrl: buildUrl + "/1748bd3e0c1054ad28bef3309292b29d.framework.js",
-        codeUrl: buildUrl + "/14fa30534a11bd29db714f1176ec96bc.wasm",
+        codeUrl: buildUrl + "/a7e9d7c9d7f8b10d413bf87f6bfd9a16.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "demo",
       productName: "Last to blast",
@@ -124,17 +124,16 @@
       }).then((unityInstance) => {
         loadingBar.style.display = "none";
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const gameToken = urlParams.get("game_token");
-        if (gameToken) {
-          unityInstance.SendMessage("MainHome", "OnReceiveGameToken", gameToken);
-        }
-
         const refreshToken = localStorage.getItem("AAADE2C83");
         if (refreshToken) {
           unityInstance.SendMessage("MainHome", "OnReceiveRefresh", refreshToken);
-        }
-
+        } else {
+          const urlParams = new URLSearchParams(window.location.search);
+          const gameToken = urlParams.get("game_token");
+          if (gameToken) {
+            unityInstance.SendMessage("MainHome", "OnReceiveGameToken", gameToken);
+          }
+        }        
         
       }).catch((message) => {
         alert(message);
