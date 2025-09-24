@@ -92,11 +92,11 @@
     }
 
     var buildUrl = "Build";
-    var loaderUrl = buildUrl + "/775fe0af7f5385050ac059819a872046.loader.js";
+    var loaderUrl = buildUrl + "/6dd69853119cd7aaa4c345145069c0ca.loader.js";
     var config = {
-        dataUrl: buildUrl + "/8fed43f4f610eee646d6d04b536ccbb2.data",
+        dataUrl: buildUrl + "/82138114e44ec158926c1254748a07c7.data",
         frameworkUrl: buildUrl + "/1748bd3e0c1054ad28bef3309292b29d.framework.js",
-        codeUrl: buildUrl + "/42ac799ac9cf1fda8556e9e5d4d37e8a.wasm",
+        codeUrl: buildUrl + "/bdbbdff3c70562395d16bea45701b619.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "demo",
       productName: "Last to blast",
@@ -124,15 +124,12 @@
       }).then((unityInstance) => {
         loadingBar.style.display = "none";
 
-        // ✅ Unity 로드 후 호출 부분
-        // 1) URL에서 game_token 추출
         const urlParams = new URLSearchParams(window.location.search);
         const gameToken = urlParams.get("game_token");
         if (gameToken) {
           unityInstance.SendMessage("MainHome", "OnReceiveGameToken", gameToken);
         }
 
-        // 2) localStorage에서 refresh_token 가져오기
         const refreshToken = localStorage.getItem("refresh_token");
         if (refreshToken) {
           unityInstance.SendMessage("MainHome", "OnReceiveRefresh", refreshToken);
