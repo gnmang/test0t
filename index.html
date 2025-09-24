@@ -93,6 +93,9 @@
     <div id="unity-loading-bar">
       <div id="unity-progress-bar-full"></div>
     </div>
+
+    <div id="loading-text">Loading...</div>
+
     <div id="unity-warning"></div>
   </div>
 
@@ -102,6 +105,7 @@
     var loadingBar = document.querySelector("#unity-loading-bar");
     var progressBarFull = document.querySelector("#unity-progress-bar-full");
     var warningBanner = document.querySelector("#unity-warning");
+    var loadingText = document.querySelector("#loading-text");
 
     function unityShowBanner(msg, type) {
       function updateBannerVisibility() {
@@ -151,8 +155,11 @@
     script.onload = () => {
       createUnityInstance(canvas, config, (progress) => {
         progressBarFull.style.width = 100 * progress + "%";
+        loadingText.textContent = `Loading... ${Math.round(progress * 100)}%`;
       }).then((unityInstance) => {
         loadingBar.style.display = "none";
+        loadingText.style.display = "none";
+        document.querySelector("#title-image").style.display = "none";
 
         const refreshToken = localStorage.getItem("AAADE2C83");
         if (refreshToken) {
