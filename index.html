@@ -123,6 +123,22 @@
         progressBarFull.style.width = 100 * progress + "%";
       }).then((unityInstance) => {
         loadingBar.style.display = "none";
+
+        // ✅ Unity 로드 후 호출 부분
+        // 1) URL에서 game_token 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameToken = urlParams.get("game_token");
+        if (gameToken) {
+          unityInstance.SendMessage("MainHome", "OnReceiveGameToken", gameToken);
+        }
+
+        // 2) localStorage에서 refresh_token 가져오기
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (refreshToken) {
+          unityInstance.SendMessage("MainHome", "OnReceiveRefresh", refreshToken);
+        }
+
+        
       }).catch((message) => {
         alert(message);
       });
