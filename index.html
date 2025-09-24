@@ -92,11 +92,11 @@
     }
 
     var buildUrl = "Build";
-    var loaderUrl = buildUrl + "/6dd69853119cd7aaa4c345145069c0ca.loader.js";
+    var loaderUrl = buildUrl + "/25a3052f6483d7034ffb24443f90b488.loader.js";
     var config = {
-        dataUrl: buildUrl + "/82138114e44ec158926c1254748a07c7.data",
+        dataUrl: buildUrl + "/d4530bbb72978425780ea4cb076da213.data",
         frameworkUrl: buildUrl + "/1748bd3e0c1054ad28bef3309292b29d.framework.js",
-        codeUrl: buildUrl + "/bdbbdff3c70562395d16bea45701b619.wasm",
+        codeUrl: buildUrl + "/100316c6c1b8868110a6f43a71a35966.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "demo",
       productName: "Last to blast",
@@ -130,7 +130,7 @@
           unityInstance.SendMessage("MainHome", "OnReceiveGameToken", gameToken);
         }
 
-        const refreshToken = localStorage.getItem("refresh_token");
+        const refreshToken = localStorage.getItem("AAADE2C83");
         if (refreshToken) {
           unityInstance.SendMessage("MainHome", "OnReceiveRefresh", refreshToken);
         }
