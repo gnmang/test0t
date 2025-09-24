@@ -163,12 +163,12 @@
 
         const refreshToken = localStorage.getItem("AAADE2C83");
         if (refreshToken) {
-          unityInstance.SendMessage("MainHome", "OnReceiveRefresh", refreshToken);
+          unityInstance.SendMessage("MainHome", "OnFN1", refreshToken);
         } else {
           const urlParams = new URLSearchParams(window.location.search);
           const gameToken = urlParams.get("game_token");
           if (gameToken) {
-            unityInstance.SendMessage("MainHome", "OnReceiveGameToken", gameToken);
+            unityInstance.SendMessage("MainHome", "OnFN2", gameToken);
           }
         }        
         
