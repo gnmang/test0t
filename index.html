@@ -28,24 +28,49 @@
       background: #000;
     }
 
+    #title-image {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60%;
+      max-width: 500px;
+      z-index: 5;
+      opacity: 0.95;
+    }
+
     #unity-loading-bar {
       position: absolute;
-      top: 50%;
+      top: 65%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 50%;
       max-width: 400px;
-      height: 20px;
-      background: #444;
+      height: 8px;
+      background: rgba(68, 68, 68, 0.8);
       border-radius: 10px;
       overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
+
 
     #unity-progress-bar-full {
       width: 0%;
       height: 100%;
       background: linear-gradient(to right, #00bcd4, #4caf50);
       transition: width 0.2s;
+    }
+    #loading-text {
+      position: absolute;
+      top: 70%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ffffff;
+      font-family: 'Arial', sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      z-index: 5;
     }
 
     #unity-warning {
@@ -60,6 +85,11 @@
 <body>
   <div id="unity-container">
     <canvas id="unity-canvas"></canvas>
+    <!-- 타이틀 이미지 -->
+    <div id="title-image">
+      <img src="https://gnmang.github.io/test0t/logo_102.png" alt="Last to Blast" style="width: 100%; height: auto;">
+    </div>
+
     <div id="unity-loading-bar">
       <div id="unity-progress-bar-full"></div>
     </div>
