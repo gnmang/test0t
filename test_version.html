@@ -95,18 +95,54 @@
     } */
     #refreshNotice {
   position: fixed;
-  top: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  background: #333;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-family: sans-serif;
+  padding: 30px 40px;
+  border-radius: 16px;
+  font-family: 'Arial', sans-serif;
   display: none;
   z-index: 9999;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  min-width: 350px;
+  font-size: 18px;
+  font-weight: bold;
+  animation: popupFadeIn 0.3s ease-out;
 }
-    #refreshNotice button {
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+#refreshNotice button {
+  margin-top: 15px;
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#refreshNotice button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+    /* #refreshNotice button {
       margin-left: 10px;
       background: #4CAF50;
       color: white;
@@ -114,7 +150,7 @@
       padding: 5px 10px;
       border-radius: 4px;
       cursor: pointer;
-    }
+    } */
 
   </style>
 </head>
