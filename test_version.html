@@ -259,16 +259,38 @@
     const LOCAL_VERSION = "1.0.0"; 
 
     async function checkVersion() {
+      const baseUrl = "https://fxxfhoogvuphnjqjvuck.supabase.co/functions/v1";
+      const endpoint = `${baseUrl}/api/game-version?_=${Date.now()}`;
+
       try {
-        const res = await fetch('/version?_=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('version fetch error');
+        const res = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          cache: "no-store",
+        });
+
+        if (!res.ok) throw new Error(`version fetch error: ${res.status}`);
+
         const data = await res.json();
 
-        if (data.version !== LOCAL_VERSION) {
-          showUpdateNotice(data.version);
+        // 응답 구조: { success: true, result: { game_version: "3" } }
+        const serverVersion = data?.result?.game_version;
+
+        if (!serverVersion) {
+          console.warn("서버에서 game_version을 받지 못했습니다:", data);
+          return;
+        }
+
+        if (serverVersion !== LOCAL_VERSION) {
+          showUpdateNotice(serverVersion);
+        } else {
+          console.log("최신 버전입니다:", serverVersion);
         }
       } catch (e) {
-        console.warn('버전 체크 실패:', e);
+        console.warn("버전 체크 실패:", e);
       }
     }
 
@@ -279,7 +301,11 @@
         window.location.reload(true);
       };
     }
-    showUpdateNotice(3);
+    // test
+    // showUpdateNotice(3);
+
+    checkVersion();
+
     // 페이지 로드 시 5초 후에 한번 체크하고, 이후 1분마다 체크
     // setTimeout(checkVersion, 5000);
     // setInterval(checkVersion, 60000);
