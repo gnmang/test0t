@@ -256,7 +256,7 @@
       });
     };
 
-    const LOCAL_VERSION = 3; 
+    const LOCAL_VERSION = "3";
 
     async function checkVersion() {
       const baseUrl = "https://fxxfhoogvuphnjqjvuck.supabase.co/functions/v1";
@@ -275,6 +275,7 @@
         if (!res.ok) throw new Error(`version fetch error: ${res.status}`);
 
         const data = await res.json();
+        console.log("버전 체크 응답:", data);
 
         // 응답 구조: { success: true, result: { game_version: "3" } }
         const serverVersion = data?.result?.game_version;
@@ -285,6 +286,8 @@
         }
 
         if (serverVersion !== LOCAL_VERSION) {
+            console.log("현재 버전:", LOCAL_VERSION, "서버 버전:", serverVersion);
+            console.log("새 버전이 있습니다:", serverVersion);
           showUpdateNotice(serverVersion);
         } else {
           console.log("최신 버전입니다:", serverVersion);
