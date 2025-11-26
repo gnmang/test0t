@@ -204,11 +204,11 @@
     }
 
     var buildUrl = "Build";
-    var loaderUrl = buildUrl + "/6606b6b0543637a90d874e5fefe95394.loader.js";
+    var loaderUrl = buildUrl + "/b7cbe5b236f3d3a5d625707f73475857.loader.js";
     var config = {
-        dataUrl: buildUrl + "/300c0fa2ab054d9e1b3845ca7e128586.data",
+        dataUrl: buildUrl + "/eb710210b7a11683b728f86d5331e9b9.data",
         frameworkUrl: buildUrl + "/8e292d7c7054f0688e94339597f9576b.framework.js",
-        codeUrl: buildUrl + "/5287fba78f411b68dc2ac82814346bb3.wasm",
+        codeUrl: buildUrl + "/1edd918ed91b474c3c1dd9cf8681f983.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "demo",
       productName: "Last to blast",
@@ -239,22 +239,50 @@
         loadingText.style.display = "none";
         document.querySelector("#title-image").style.display = "none";
 
-        const refreshToken = localStorage.getItem("AAADE2C83");
-        if (refreshToken) {
-          unityInstance.SendMessage("MainHome", "OnFN1", refreshToken);
-        } else {
-          const urlParams = new URLSearchParams(window.location.search);
-          const gameToken = urlParams.get("game_token");
-          if (gameToken) {
-            unityInstance.SendMessage("MainHome", "OnFN2", gameToken);
-          }
-        }        
+        // const refreshToken = localStorage.getItem("AAADE2C83");
+        // if (refreshToken) {
+        //   unityInstance.SendMessage("MainHome", "OnFN1", refreshToken);
+        // } else {
+        //   const urlParams = new URLSearchParams(window.location.search);
+        //   const gameToken = urlParams.get("game_token");
+        //   if (gameToken) {
+        //     unityInstance.SendMessage("MainHome", "OnFN2", gameToken);
+        //   }
+        // }        
+
+
+const urlParams = new URLSearchParams(window.location.search);
+const gameToken = urlParams.get("game_token");
+const refreshToken = localStorage.getItem("AAADE2C83");
+
+// 이미 사용된 game_token을 저장할 키
+const usedTokenKey = "USED_GAME_TOKEN";
+const usedGameToken = localStorage.getItem(usedTokenKey);
+
+if (gameToken) {
+  if (usedGameToken === gameToken) {
+    // 이미 사용된 game_token이면 refreshToken 로그인
+    if (refreshToken) {
+      unityInstance.SendMessage("MainHome", "OnFN1", refreshToken);
+    } else {
+      console.warn("이미 사용된 game_token이지만 refreshToken이 없습니다.");
+    }
+  } else {
+    // 처음 보는 game_token이면 게임 토큰 로그인
+    unityInstance.SendMessage("MainHome", "OnFN2", gameToken);
+    localStorage.setItem(usedTokenKey, gameToken);
+  }
+} else if (refreshToken) {
+  // game_token이 없으면 refreshToken 로그인
+  unityInstance.SendMessage("MainHome", "OnFN1", refreshToken);
+}
+
         
       }).catch((message) => {
         alert(message);
       });
     };
-    const LOCAL_VERSION = "4";
+    const LOCAL_VERSION = "5";
 
     async function checkVersion() {
       const baseUrl = "https://fxxfhoogvuphnjqjvuck.supabase.co/functions/v1";
