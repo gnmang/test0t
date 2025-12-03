@@ -1,284 +1,286 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Prettifier</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-            padding: 30px;
-            text-align: center;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 300;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        .main-content {
-            padding: 40px;
-        }
-
-        .input-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group label {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .input-group label::before {
-            content: "📝";
-        }
-
-        .output-group label::before {
-            content: "✨";
-        }
-
-        textarea {
-            width: 100%;
-            height: 350px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            font-family: inherit;
-            font-size: 14px;
-            line-height: 1.5;
-            resize: vertical;
-            transition: all 0.3s ease;
-            background: #fafafa;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-            background: white;
-        }
-
-        #input-json {
-            font-family: inherit;
-        }
-
-        #output-json {
-            font-family: inherit;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            border-color: #444;
-        }
-
-        .button-container {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .convert-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
-        }
-
-        .convert-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
-        }
-
-        .convert-btn:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            background: #ff4757;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-weight: 500;
-            display: none;
-            animation: slideInDown 0.3s ease;
-        }
-
-        @keyframes slideInDown {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>JSON Prettifier</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
 
-        .json-syntax {
-            white-space: pre-wrap;
-            font-family: inherit;
-            line-height: 1.6;
-        }
-
-        .json-key {
-            color: #9cdcfe;
-            font-weight: 600;
-        }
-
-        .json-string {
-            color: #ce9178;
-        }
-
-        .json-number {
-            color: #b5cea8;
-        }
-
-        .json-boolean {
-            color: #569cd6;
-            font-weight: 600;
-        }
-
-        .json-null {
-            color: #569cd6;
-            font-weight: 600;
-        }
-
-        .json-punctuation {
-            color: #d4d4d4;
-        }
-
-        @media (max-width: 768px) {
-            .input-section {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
+            body {
+                font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+                background: linear-gradient(
+                    135deg,
+                    #667eea 0%,
+                    #764ba2 100%
+                );
+                min-height: 100vh;
                 padding: 20px;
             }
-            
-            textarea {
-                height: 250px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>JSON Prettifier</h1>
-            <p>JSON 문자열을 예쁘게 포맷팅하고 색상을 입혀보세요</p>
-        </div>
-        
-        <div class="main-content">
-            <div class="input-section">
-                <div class="input-group">
-                    <label for="input-json">JSON 입력</label>
-                    <textarea id="input-json" placeholder='{"name": "홍길동", "age": 30, "city": "서울"}'></textarea>
-                </div>
-                
-                <div class="input-group output-group">
-                    <label for="output-json">포맷된 JSON</label>
-                    <textarea id="output-json" readonly placeholder="변환된 JSON이 여기에 표시됩니다..."></textarea>
-                </div>
-            </div>
-            
-            <div class="button-container">
-                <button class="convert-btn" onclick="convertJson()">🎨 변환하기</button>
-            </div>
-            
-            <div id="error-message" class="error-message"></div>
-        </div>
-    </div>
 
-    <script>
-        function convertJson() {
-            const inputJson = document.getElementById('input-json').value.trim();
-            const outputJson = document.getElementById('output-json');
-            const errorMessage = document.getElementById('error-message');
-            
-            // 에러 메시지 숨기기
-            errorMessage.style.display = 'none';
-            
-            if (!inputJson) {
-                showError('JSON 문자열을 입력해주세요.');
-                return;
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
             }
-            
-            try {
-                // JSON 파싱
-                const parsedJson = JSON.parse(inputJson);
-                
-                // 예쁘게 포맷팅
-                const formattedJson = JSON.stringify(parsedJson, null, 2);
-                
-                // 색상 적용
-                const coloredJson = syntaxHighlight(formattedJson);
-                
-                // 출력에 HTML로 표시하기 위해 div 요소 생성
-                outputJson.style.display = 'none';
-                
+
+            .header {
+                background: linear-gradient(
+                    45deg,
+                    #4facfe 0%,
+                    #00f2fe 100%
+                );
+                padding: 30px;
+                text-align: center;
+                color: white;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+                font-weight: 300;
+                margin-bottom: 10px;
+            }
+
+            .header p {
+                opacity: 0.9;
+                font-size: 1.1rem;
+            }
+
+            .main-content {
+                padding: 40px;
+            }
+
+            .input-section {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin-bottom: 30px;
+            }
+
+            .input-group {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .input-group label {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .input-group label::before {
+                content: "📝";
+            }
+
+            .output-group label::before {
+                content: "✨";
+            }
+
+            textarea {
+                width: 100%;
+                height: 350px;
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                padding: 20px;
+                font-family: inherit;
+                font-size: 14px;
+                line-height: 1.5;
+                resize: vertical;
+                transition: all 0.3s ease;
+                background: #fafafa;
+            }
+
+            textarea:focus {
+                outline: none;
+                border-color: #4facfe;
+                box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+                background: white;
+            }
+
+            #input-json {
+                font-family: inherit;
+            }
+
+            #output-json {
+                font-family: inherit;
+                background: #1e1e1e;
+                color: #d4d4d4;
+                border-color: #444;
+            }
+
+            .button-container {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .convert-btn {
+                background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+                color: white;
+                border: none;
+                padding: 15px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            }
+
+            .convert-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
+            }
+
+            .convert-btn:active {
+                transform: translateY(0);
+            }
+
+            .error-message {
+                background: #ff4757;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                font-weight: 500;
+                display: none;
+                animation: slideInDown 0.3s ease;
+            }
+
+            @keyframes slideInDown {
+                from {
+                    transform: translateY(-20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .json-syntax {
+                white-space: pre-wrap;
+                font-family: inherit;
+                line-height: 1.6;
+            }
+
+            .json-key {
+                color: #9cdcfe;
+                font-weight: 600;
+            }
+
+            .json-string {
+                color: #ce9178;
+            }
+
+            .json-number {
+                color: #b5cea8;
+            }
+
+            .json-boolean {
+                color: #569cd6;
+                font-weight: 600;
+            }
+
+            .json-null {
+                color: #569cd6;
+                font-weight: 600;
+            }
+
+            .json-punctuation {
+                color: #d4d4d4;
+            }
+
+            @media (max-width: 768px) {
+                .input-section {
+                    grid-template-columns: 1fr;
+                    gap: 20px;
+                }
+
+                .header h1 {
+                    font-size: 2rem;
+                }
+
+                .main-content {
+                    padding: 20px;
+                }
+
+                textarea {
+                    height: 250px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>JSON Prettifier</h1>
+                <p>JSON 문자열을 예쁘게 포맷팅하고 색상을 입혀보세요</p>
+            </div>
+
+            <div class="main-content">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="input-json">JSON 입력</label>
+                        <textarea
+                            id="input-json"
+                            placeholder='{"name": "홍길동", "age": 30, "city": "서울"}'
+                        ></textarea>
+                    </div>
+
+                    <div class="input-group output-group">
+                        <label for="output-json">포맷된 JSON</label>
+                        <textarea
+                            id="output-json"
+                            readonly
+                            placeholder="변환된 JSON이 여기에 표시됩니다..."
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="convert-btn" onclick="convertJson()">
+                        🎨 변환하기
+                    </button>
+                </div>
+
+                <div id="error-message" class="error-message"></div>
+            </div>
+        </div>
+
+        <script>
+            // 기존 convertJson()에 있던 출력 관련 코드를 분리한 함수
+            function displayColored(coloredHtml) {
+                const outputJson = document.getElementById(
+                    "output-json",
+                );
+
+                // textarea 보이기/숨기기 처리
+                outputJson.style.display = "none";
+
                 // 기존 컬러 div가 있으면 제거
-                const existingColorDiv = document.querySelector('.colored-json');
+                const existingColorDiv = document.querySelector(
+                    ".colored-json",
+                );
                 if (existingColorDiv) {
                     existingColorDiv.remove();
                 }
-                
+
                 // 새로운 컬러 div 생성
-                const colorDiv = document.createElement('div');
-                colorDiv.className = 'colored-json json-syntax';
-                colorDiv.innerHTML = coloredJson;
+                const colorDiv = document.createElement("div");
+                colorDiv.className = "colored-json json-syntax";
+                colorDiv.innerHTML = coloredHtml;
                 colorDiv.style.cssText = `
                     width: 100%;
                     height: 350px;
@@ -292,47 +294,107 @@
                     font-size: 14px;
                     line-height: 1.5;
                 `;
-                
+
                 // textarea 다음에 컬러 div 추가
-                outputJson.parentNode.insertBefore(colorDiv, outputJson.nextSibling);
-                
-            } catch (error) {
-                showError('올바르지 않은 JSON 형식입니다: ' + error.message);
+                outputJson.parentNode.insertBefore(
+                    colorDiv,
+                    outputJson.nextSibling,
+                );
             }
-        }
-        
-        function syntaxHighlight(json) {
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'json-number';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                    } else {
-                        cls = 'json-string';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                } else if (/null/.test(match)) {
-                    cls = 'json-null';
+
+            function convertJson() {
+                const inputJson = document.getElementById(
+                    "input-json",
+                ).value.trim();
+                const outputJson = document.getElementById(
+                    "output-json",
+                );
+                const errorMessage = document.getElementById(
+                    "error-message",
+                );
+
+                errorMessage.style.display = "none";
+
+                if (!inputJson) {
+                    showError("JSON 문자열을 입력해주세요.");
+                    return;
                 }
-                return '<span class="' + cls + '">' + match + '</span>';
-            });
-        }
-        
-        function showError(message) {
-            const errorElement = document.getElementById('error-message');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-        
-        // Enter 키로도 변환 가능하도록
-        document.getElementById('input-json').addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                convertJson();
+
+                try {
+                    let cleaned = inputJson;
+
+                    // 첫 번째 파싱: 문자열로 감싸진 JSON인지 확인
+                    try {
+                        cleaned = JSON.parse(inputJson);
+                    } catch (e) {
+                        // 그냥 무시하고 다음 단계에서 처리
+                    }
+
+                    // 두 번째 파싱: "\n \"a2\"" 같은 구조면 다시 복구
+                    if (typeof cleaned === "string") {
+                        cleaned = JSON.parse(cleaned);
+                    }
+
+                    const formattedJson = JSON.stringify(
+                        cleaned,
+                        null,
+                        2,
+                    );
+                    const coloredJson = syntaxHighlight(
+                        formattedJson,
+                    );
+
+                    displayColored(coloredJson);
+                } catch (error) {
+                    showError(
+                        "올바르지 않은 JSON 형식입니다: " +
+                            error.message,
+                    );
+                }
             }
-        });
-    </script>
-</body>
+
+            function syntaxHighlight(json) {
+                json = json.replace(/&/g, "&amp;").replace(
+                    /</g,
+                    "&lt;",
+                ).replace(/>/g, "&gt;");
+
+                return json.replace(
+                    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+                    function (match) {
+                        let cls = "json-number";
+                        if (/^"/.test(match)) {
+                            if (/:$/.test(match)) {
+                                cls = "json-key";
+                            } else {
+                                cls = "json-string";
+                            }
+                        } else if (/true|false/.test(match)) {
+                            cls = "json-boolean";
+                        } else if (/null/.test(match)) {
+                            cls = "json-null";
+                        }
+                        return '<span class="' + cls + '">' +
+                            match + "</span>";
+                    },
+                );
+            }
+
+            function showError(message) {
+                const errorElement = document.getElementById(
+                    "error-message",
+                );
+                errorElement.textContent = message;
+                errorElement.style.display = "block";
+            }
+
+            // Enter 키로도 변환 가능하도록
+            document.getElementById("input-json")
+                .addEventListener("keydown", function (e) {
+                    if (e.ctrlKey && e.key === "Enter") {
+                        convertJson();
+                    }
+                });
+        </script>
+    </body>
 </html>
