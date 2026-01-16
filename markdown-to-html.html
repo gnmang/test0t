@@ -437,50 +437,63 @@
         const preview = document.getElementById('html-preview');
 
         // Initialize with sample content
-        const sampleMarkdown = `# Auth Edge Function — API Reference
+const sampleMarkdown = `
+# 📘 마크다운 샘플 문서
 
-핸들러 소스: [supabase/functions/auth/index.ts](supabase/functions/auth/index.ts#L1)
-
-## API 엔드포인트
-
-| Method | Endpoint       | Handler               | Auth | Description                                   |
-|--------|----------------|-----------------------|------|-----------------------------------------------|
-| POST   | /create        | handleGameCreate      | ✅   | 신규 게임 세션 생성 (방 만들기)               |
-| POST   | /register      | handleGameRegister    | -    | (사용 안 함)                                  |
-| POST   | /start         | handleGameStart       | ✅   | 게임 시작 처리 및 참가자(유저+봇) DB 등록      |
-| POST   | /result        | handleGameResult      | ✅   | 결과 전송, 플랫폼 정산 및 보상/랭킹 처리       |
-| POST   | /match         | handleGameMatch       | ✅   | 유저 입장 요청 및 코인 차감 (매칭 완료)        |
-| POST   | /rejoin/reset  | handleGameRejoinReset | ✅   | 종료된 게임의 유저 세션 정보 초기화            |
-
-## 공통 응답 형식
-
-\`\`\`json
-{ "success": true, "result": <body> }
-\`\`\`
-
-## POST /auth/signin (개발/비사용)
-
-**Handler:** \`handleAuthSignIn\` — [supabase/functions/auth/handlers/auth.ts](supabase/functions/auth/handlers/auth.ts#L1)
-
-**Request JSON:**
-\`\`\`json
-{ "nickname": "<nick>" }
-\`\`\`
-
-**Success:**
-\`\`\`json
-{ "user_id": "...", "access_token": "...", "refresh_token": "...", "expires_in": ..., "emgg_balance": ..., "nickname": "..." }
-\`\`\`
-
-**주요 에러:**
-- \`INVALID_PARAMS\` (3001)
-- \`DATABASE_ERROR\` (1004)
-- \`UNREGISTERED_USER\` (3000)
-- \`LOGIN_FAILED\` (3002)
+## 1. 제목 (Headings)
+# H1 제목
+## H2 제목
+### H3 제목
+#### H4 제목
+##### H5 제목
+###### H6 제목
 
 ---
 
-> **비고:** 일부 엔드포인트는 내부/개발용이며 실제 서비스 흐름에서는 \`mgg-auth\` 또는 플랫폼 연동 방식을 사용합니다.`;
+## 2. 텍스트 스타일
+- **굵게** → \`**굵게**\`
+- *기울임* → \`*기울임*\`
+- ~~취소선~~ → \`~~취소선~~\`
+- \`인라인 코드\` → \`\` \`인라인 코드\` \`\`
+
+---
+
+## 3. 목록 (Lists)
+
+### ● 순서 없는 목록
+- 항목 A
+  - 하위 항목 A1
+  - 하위 항목 A2
+- 항목 B
+
+### ● 순서 있는 목록
+1. 첫 번째
+2. 두 번째
+   1. 하위 첫 번째
+   2. 하위 두 번째
+
+---
+
+## 4. 링크 & 이미지
+[네이버](https://www.naver.com)
+
+![샘플 이미지](https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/320px-PNG_transparency_demonstration_1.png)
+
+---
+
+## 5. 인용문 (Blockquote)
+> 인용문 예시입니다.
+>> 중첩 인용도 가능합니다.
+
+---
+
+## 6. 코드 블록 (Code Block)
+\`\`\`python
+def hello():
+    print("Hello Markdown!")
+\`\`\`
+`;
+
 
         editor.value = sampleMarkdown;
 
