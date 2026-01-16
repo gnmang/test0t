@@ -126,8 +126,9 @@ textarea {
 }
 
 .preview .list-sub {
-  margin: 4px 0 8px 24px;
-  opacity: 0.9;
+  margin-left: 24px;
+  margin-bottom: 8px;
+  color: rgba(255,255,255,0.85);
 }
 /* ===== Controls ===== */
 .controls {
@@ -228,25 +229,25 @@ function parseList(md) {
   let inList = false;
 
   lines.forEach(line => {
+
     // 리스트 아이템
     if (/^- /.test(line)) {
       if (!inList) {
         html += "<ul>";
         inList = true;
       }
-      html += `<li>${line.replace(/^- /,"")}</li>`;
+      html += `<li>${line.replace(/^- /, "")}</li>`;
       return;
     }
 
     // 리스트 내부 들여쓰기 문단 (2칸 이상)
     if (inList && /^\s{2,}\S/.test(line)) {
-      html += `<p class="list-sub">${line.trim()}</p>`;
+      html += `<div class="list-sub">${line.trim()}</div>`;
       return;
     }
 
-    // 빈 줄
-    if (line.trim() === "") {
-      html += "<br>";
+    // 🔥 리스트 안의 빈 줄은 그냥 무시
+    if (inList && line.trim() === "") {
       return;
     }
 
@@ -264,6 +265,7 @@ function parseList(md) {
 }
 
 
+
 function render(md) {
 
   // 1. 코드블록
@@ -276,7 +278,7 @@ function render(md) {
 
    // 3. 리스트 (공백 기반)
   md = parseList(md);
-  
+
   // 3. 인라인 문법
   md = md
     .replace(/^###### (.*)$/gm,"<h6>$1</h6>")
