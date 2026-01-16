@@ -116,7 +116,19 @@ textarea {
   text-decoration: none;
 }
 .preview a:hover { text-decoration: underline; }
+.preview ul {
+  padding-left: 20px;
+  margin: 12px 0;
+}
 
+.preview li {
+  margin: 6px 0;
+}
+
+.preview .list-sub {
+  margin: 4px 0 8px 24px;
+  opacity: 0.9;
+}
 /* ===== Controls ===== */
 .controls {
   position: fixed;
@@ -210,6 +222,47 @@ function parseTable(md) {
     }
   );
 }
+function parseList(md) {
+  const lines = md.split("\n");
+  let html = "";
+  let inList = false;
+
+  lines.forEach(line => {
+    // 리스트 아이템
+    if (/^- /.test(line)) {
+      if (!inList) {
+        html += "<ul>";
+        inList = true;
+      }
+      html += `<li>${line.replace(/^- /,"")}</li>`;
+      return;
+    }
+
+    // 리스트 내부 들여쓰기 문단 (2칸 이상)
+    if (inList && /^\s{2,}\S/.test(line)) {
+      html += `<p class="list-sub">${line.trim()}</p>`;
+      return;
+    }
+
+    // 빈 줄
+    if (line.trim() === "") {
+      html += "<br>";
+      return;
+    }
+
+    // 리스트 종료
+    if (inList) {
+      html += "</ul>";
+      inList = false;
+    }
+
+    html += line + "\n";
+  });
+
+  if (inList) html += "</ul>";
+  return html;
+}
+
 
 function render(md) {
 
@@ -221,6 +274,9 @@ function render(md) {
   // 2. 테이블
   md = parseTable(md);
 
+   // 3. 리스트 (공백 기반)
+  md = parseList(md);
+  
   // 3. 인라인 문법
   md = md
     .replace(/^###### (.*)$/gm,"<h6>$1</h6>")
