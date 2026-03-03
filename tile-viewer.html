@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tile Grid Viewer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0f;--panel:#141418;--panel2:#18181f;
+  --border:#2a2a35;--accent:#00e5b0;--accent2:#ff4d6d;--accent3:#7b6fff;
+  --text:#e8e8f0;--muted:#6b6b80;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;flex-wrap:wrap}
+.logo{font-family:var(--sans);font-weight:800;font-size:13px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+.logo span{color:var(--muted)}
+.vsep{width:1px;height:16px;background:var(--border);flex-shrink:0}
+.controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ctrl-group{display:flex;align-items:center;gap:4px;background:#1a1a22;border:1px solid var(--border);border-radius:5px;padding:3px 8px}
+.ctrl-group label{font-family:var(--mono);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+.ctrl-group input[type=number]{background:transparent;border:none;color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:600;width:46px;outline:none;text-align:center}
+.ctrl-group input[type=number]::-webkit-inner-spin-button{opacity:.4}
+.ctrl-group .unit{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.info-pill{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8px;color:var(--muted);background:#1a1a22;border:1px solid var(--border);border-radius:5px;padding:3px 8px}
+.info-pill .val{color:var(--accent3);font-weight:600;font-size:10px}
+.toggle-btn{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8px;color:var(--muted);background:#1a1a22;border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;transition:all .15s;user-select:none;white-space:nowrap}
+.toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toggle-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,176,.08)}
+.toggle-btn .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* ── BODY ── */
+.body-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.top-section{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* ── CANVAS AREA ── */
+.canvas-area{
+  flex:1;overflow:hidden;position:relative;
+  background:var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 15%,rgba(123,111,255,.04) 0%,transparent 55%),
+    radial-gradient(circle at 85% 85%,rgba(0,229,176,.03) 0%,transparent 55%);
+}
+
+/* Drop Zone */
+#dropzone{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  border:2px dashed var(--border);border-radius:12px;margin:16px;
+  cursor:pointer;transition:all .2s;overflow:hidden;
+}
+#dropzone::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,229,176,.03),rgba(123,111,255,.03));opacity:0;transition:opacity .2s}
+#dropzone:hover,#dropzone.drag-over{border-color:var(--accent);background:rgba(0,229,176,.04)}
+#dropzone:hover::before,#dropzone.drag-over::before{opacity:1}
+.drop-icon{width:50px;height:50px;border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+#dropzone:hover .drop-icon,#dropzone.drag-over .drop-icon{border-color:var(--accent)}
+.drop-icon svg{opacity:.5;transition:opacity .2s}
+#dropzone:hover .drop-icon svg,#dropzone.drag-over .drop-icon svg{opacity:1}
+.drop-title{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text)}
+.drop-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+#fileInput{display:none}
+
+/* Viewport = panning container */
+#viewport{
+  position:absolute;inset:0;overflow:hidden;cursor:grab;
+  display:none;
+}
+#viewport.panning{cursor:grabbing}
+/* Inner transform wrapper */
+#zoomWrap{
+  position:absolute;
+  transform-origin:0 0;
+  will-change:transform;
+}
+#mainCanvas{display:block;image-rendering:pixelated}
+
+/* ── ZOOM CONTROLS ── */
+.zoom-controls{
+  position:absolute;bottom:12px;left:12px;
+  display:none;
+  flex-direction:column;gap:3px;
+  z-index:50;
+}
+.zoom-controls.visible{display:flex}
+.zoom-btn{
+  width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(20,20,24,.92);
+  border:1px solid var(--border);
+  border-radius:5px;
+  color:var(--muted);
+  font-family:var(--mono);font-size:14px;font-weight:700;
+  cursor:pointer;user-select:none;
+  transition:all .12s;
+  backdrop-filter:blur(6px);
+}
+.zoom-btn:hover{border-color:var(--accent);color:var(--accent)}
+.zoom-label{
+  text-align:center;
+  font-family:var(--mono);font-size:9px;font-weight:600;
+  color:var(--muted);
+  background:rgba(20,20,24,.92);
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:3px 0;
+  backdrop-filter:blur(6px);
+}
+.zoom-fit-btn{
+  font-size:9px;
+  font-weight:600;
+  white-space:nowrap;
+  padding:0 4px;
+  width:auto;
+  min-width:28px;
+}
+
+/* ── SIDE PANEL ── */
+.side-panel{width:210px;flex-shrink:0;border-left:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:9px 12px 8px;border-bottom:1px solid var(--border);font-family:var(--sans);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:5px;flex-shrink:0}
+.panel-header::before{content:'';width:3px;height:10px;background:var(--accent);border-radius:2px}
+.panel-header .cnt{margin-left:auto;font-family:var(--mono);font-size:8px;background:rgba(0,229,176,.1);color:var(--accent);padding:1px 5px;border-radius:3px}
+.tile-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:5px;display:flex;flex-direction:column;gap:2px}
+.tile-list::-webkit-scrollbar{width:4px}
+.tile-list::-webkit-scrollbar-track{background:transparent}
+.tile-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.tile-list::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.tile-item{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:5px;cursor:pointer;transition:background .1s;border:1px solid transparent;flex-shrink:0}
+.tile-item:hover{background:rgba(255,255,255,.04);border-color:var(--border)}
+.tile-item.selected{background:rgba(0,229,176,.08);border-color:var(--accent)}
+.tile-preview{width:28px;height:28px;border-radius:3px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);background:var(--bg)}
+.tile-preview canvas{width:100%;height:100%;image-rendering:pixelated}
+.tile-info{flex:1;min-width:0}
+.tile-idx{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent)}
+.tile-pos{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{height:182px;flex-shrink:0;border-top:1px solid var(--border);background:var(--panel2);display:flex;align-items:stretch;overflow:hidden;transition:height .2s ease}
+.detail-panel.hidden{height:0;border-top:none}
+.detail-preview{width:182px;flex-shrink:0;border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#1e1e26 0% 25%,#16161e 0% 50%) 0 0/12px 12px;position:relative;overflow:hidden}
+#detailCanvas{image-rendering:pixelated;max-width:162px;max-height:162px;border:1px solid var(--border);box-shadow:0 0 24px rgba(0,0,0,.6)}
+.detail-info{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:auto;min-width:0}
+.detail-info::-webkit-scrollbar{width:3px}
+.detail-info::-webkit-scrollbar-thumb{background:var(--border)}
+.detail-title{display:flex;align-items:baseline;gap:10px}
+.d-idx{font-family:var(--sans);font-size:22px;font-weight:800;color:var(--accent2);line-height:1}
+.d-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.detail-cell{background:#1a1a22;border:1px solid var(--border);border-radius:4px;padding:5px 7px}
+.dc-label{font-family:var(--mono);font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.dc-val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)}
+.detail-cell.hi .dc-val{color:var(--accent)}
+.detail-cell.hi2 .dc-val{color:var(--accent3)}
+.detail-nav{display:flex;align-items:center;gap:5px;margin-top:auto}
+.nav-btn{display:flex;align-items:center;gap:3px;font-family:var(--mono);font-size:8px;color:var(--muted);background:#1a1a22;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;transition:all .12s;user-select:none}
+.nav-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.detail-close{margin-left:auto;font-family:var(--mono);font-size:8px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;transition:all .12s}
+.detail-close:hover{border-color:var(--accent2);color:var(--accent2)}
+.detail-empty{flex:1;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--muted);gap:8px}
+
+/* ── STATUS BAR ── */
+.statusbar{display:flex;align-items:center;gap:12px;padding:3px 12px;border-top:1px solid var(--border);background:var(--panel);font-family:var(--mono);font-size:8px;color:var(--muted);flex-shrink:0;overflow:hidden}
+.s-item{display:flex;align-items:center;gap:3px;white-space:nowrap}
+.s-val{color:var(--text);font-weight:600}
+.s-accent{color:var(--accent)}
+.s-sep{color:var(--border)}
+
+/* ── HOVER TOOLTIP ── */
+#hoverInfo{position:fixed;background:rgba(13,13,15,.94);border:1px solid var(--accent);border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:9px;color:var(--accent);pointer-events:none;display:none;z-index:200;backdrop-filter:blur(6px);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Tile<span>Grid</span></div>
+  <div class="vsep"></div>
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>W</label>
+      <input type="number" id="tileW" value="32" min="1" max="2048">
+      <span class="unit">px</span>
+    </div>
+    <div class="ctrl-group">
+      <label>H</label>
+      <input type="number" id="tileH" value="32" min="1" max="2048">
+      <span class="unit">px</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Gap</label>
+      <input type="number" id="gapSize" value="1" min="0" max="20">
+      <span class="unit">px</span>
+    </div>
+    <div class="info-pill">IMAGE <span class="val" id="imgSizeLabel">—</span></div>
+    <div class="info-pill">TILES <span class="val" id="tileCountLabel">—</span></div>
+    <div class="vsep"></div>
+    <button class="toggle-btn active" id="toggleGrid"><span class="dot"></span>GRID</button>
+    <button class="toggle-btn active" id="toggleIndex"><span class="dot"></span>INDEX</button>
+    <button class="toggle-btn" id="toggleHighlight"><span class="dot"></span>HOVER HL</button>
+  </div>
+</header>
+
+<div class="body-wrap">
+  <div class="top-section">
+
+    <!-- CANVAS AREA -->
+    <div class="canvas-area" id="canvasArea">
+      <!-- Drop zone -->
+      <div id="dropzone">
+        <div class="drop-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <path d="M3 9h18M9 21V9"/>
+            <circle cx="6" cy="6" r=".6" fill="var(--accent)"/>
+          </svg>
+        </div>
+        <div class="drop-title">이미지를 드래그하거나 클릭</div>
+        <div class="drop-sub">PNG · JPG · GIF · WEBP · BMP</div>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+
+      <!-- Pan/zoom viewport -->
+      <div id="viewport">
+        <div id="zoomWrap">
+          <canvas id="mainCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="zoom-controls" id="zoomControls">
+        <div class="zoom-btn" id="btnZoomIn" title="확대 (+)">+</div>
+        <div class="zoom-label" id="zoomLabel">100%</div>
+        <div class="zoom-btn" id="btnZoomOut" title="축소 (-)">−</div>
+        <div class="zoom-btn zoom-fit-btn" id="btnZoomFit" title="화면에 맞춤 (F)">FIT</div>
+        <div class="zoom-btn zoom-fit-btn" id="btnZoom1" title="원본 크기 (1)">1:1</div>
+      </div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side-panel">
+      <div class="panel-header">
+        Tiles
+        <span class="cnt" id="tileListCnt">0</span>
+      </div>
+      <div class="tile-list" id="tileList">
+        <div style="padding:20px 8px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;">
+          이미지를 불러오면<br>타일 목록이 표시됩니다
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel hidden" id="detailPanel">
+    <div class="detail-empty" id="detailEmpty">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+      타일을 클릭하면 상세 정보가 표시됩니다
+    </div>
+    <div id="detailContent" style="display:none;width:100%;align-items:stretch;flex:1;">
+      <div class="detail-preview">
+        <canvas id="detailCanvas"></canvas>
+      </div>
+      <div class="detail-info">
+        <div class="detail-title">
+          <div class="d-idx" id="d-idx">#0</div>
+          <div class="d-label">Selected Tile</div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-cell hi"><div class="dc-label">Index</div><div class="dc-val" id="d-index">0</div></div>
+          <div class="detail-cell"><div class="dc-label">Col</div><div class="dc-val" id="d-col">0</div></div>
+          <div class="detail-cell"><div class="dc-label">Row</div><div class="dc-val" id="d-row">0</div></div>
+          <div class="detail-cell hi2"><div class="dc-label">Pixel X</div><div class="dc-val" id="d-px">0</div></div>
+          <div class="detail-cell hi2"><div class="dc-label">Pixel Y</div><div class="dc-val" id="d-py">0</div></div>
+          <div class="detail-cell"><div class="dc-label">Tile Size</div><div class="dc-val" id="d-size">32×32</div></div>
+        </div>
+        <div class="detail-nav">
+          <button class="nav-btn" id="btnPrev">&#9664; PREV</button>
+          <button class="nav-btn" id="btnNext">NEXT &#9654;</button>
+          <button class="detail-close" id="btnClose">&#x2715; CLOSE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="s-item"><span>FILE</span><span class="s-val" id="sb-file">없음</span></div>
+  <span class="s-sep">│</span>
+  <div class="s-item"><span>SIZE</span><span class="s-val" id="sb-size">—</span></div>
+  <span class="s-sep">│</span>
+  <div class="s-item"><span>GRID</span><span class="s-val" id="sb-grid">—</span></div>
+  <span class="s-sep">│</span>
+  <div class="s-item"><span>ZOOM</span><span class="s-val s-accent" id="sb-zoom">—</span></div>
+  <span class="s-sep">│</span>
+  <div class="s-item s-accent" id="sb-hover">마우스를 타일 위로 이동하세요</div>
+</div>
+
+<div id="hoverInfo"></div>
+
+<script>
+// ── Elements ──
+const canvasArea    = document.getElementById('canvasArea');
+const viewport      = document.getElementById('viewport');
+const zoomWrap      = document.getElementById('zoomWrap');
+const canvas        = document.getElementById('mainCanvas');
+const ctx           = canvas.getContext('2d');
+const dropzone      = document.getElementById('dropzone');
+const fileInput     = document.getElementById('fileInput');
+const tileListEl    = document.getElementById('tileList');
+const hoverInfo     = document.getElementById('hoverInfo');
+const detailPanel   = document.getElementById('detailPanel');
+const detailEmpty   = document.getElementById('detailEmpty');
+const detailContent = document.getElementById('detailContent');
+const detailCanvas  = document.getElementById('detailCanvas');
+const dctx          = detailCanvas.getContext('2d');
+const zoomControls  = document.getElementById('zoomControls');
+const zoomLabel     = document.getElementById('zoomLabel');
+
+// ── State ──
+let img = null, imgW = 0, imgH = 0;
+let tileW = 32, tileH = 32, gapSize = 1;
+let showGrid = true, showIndex = true, showHighlight = false;
+let selectedTile = -1, hoveredTile = -1;
+let cols = 0, rows = 0;
+
+// Zoom/pan state — these work on the zoomWrap CSS transform
+// zoom = CSS scale applied to the canvas
+let zoom = 1;
+const ZOOM_MIN = 0.05, ZOOM_MAX = 32;
+const ZOOM_STEP = 0.12; // wheel step factor
+
+// Pan state (offset of zoomWrap inside viewport, in pixels)
+let panX = 0, panY = 0;
+let isPanning = false;
+let panStartX = 0, panStartY = 0, panStartPX = 0, panStartPY = 0;
+
+// ── Inputs ──
+const tileWInput = document.getElementById('tileW');
+const tileHInput = document.getElementById('tileH');
+const gapInput   = document.getElementById('gapSize');
+tileWInput.addEventListener('input', () => { tileW = Math.max(1, parseInt(tileWInput.value)||1); redraw(); });
+tileHInput.addEventListener('input', () => { tileH = Math.max(1, parseInt(tileHInput.value)||1); redraw(); });
+gapInput.addEventListener('input',   () => { gapSize = Math.max(0, parseInt(gapInput.value)||0); redraw(); });
+
+// ── Toggles ──
+function setupToggle(id, getter, setter) {
+  const btn = document.getElementById(id);
+  btn.addEventListener('click', () => { setter(!getter()); btn.classList.toggle('active', getter()); redraw(); });
+}
+setupToggle('toggleGrid',      () => showGrid,      v => showGrid = v);
+setupToggle('toggleIndex',     () => showIndex,     v => showIndex = v);
+setupToggle('toggleHighlight', () => showHighlight, v => showHighlight = v);
+
+// ── File loading ──
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImageFile(e.target.files[0]); });
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadImageFile(f);
+});
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  if (!img) return;
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadImageFile(f);
+});
+
+function loadImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const image = new Image();
+    image.onload = () => {
+      img = image;
+      imgW = image.naturalWidth;
+      imgH = image.naturalHeight;
+      dropzone.style.display = 'none';
+      viewport.style.display = 'block';
+      zoomControls.classList.add('visible');
+      selectedTile = -1;
+      document.getElementById('imgSizeLabel').textContent = imgW + ' × ' + imgH;
+      document.getElementById('sb-file').textContent = file.name;
+      document.getElementById('sb-size').textContent = imgW + '×' + imgH;
+      hideDetail();
+      redraw();
+      fitToView();
+    };
+    image.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Main draw (draws image + overlays onto canvas at native resolution) ──
+function redraw() {
+  if (!img) return;
+  cols = Math.floor(imgW / tileW);
+  rows = Math.floor(imgH / tileH);
+
+  // Canvas is always native image resolution
+  canvas.width  = imgW;
+  canvas.height = imgH;
+
+  ctx.clearRect(0, 0, imgW, imgH);
+  ctx.drawImage(img, 0, 0, imgW, imgH);
+
+  // Dim remainder
+  const remX = cols * tileW, remY = rows * tileH;
+  if (remX < imgW || remY < imgH) {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    if (remX < imgW) ctx.fillRect(remX, 0, imgW - remX, imgH);
+    if (remY < imgH) ctx.fillRect(0, remY, remX, imgH - remY);
+  }
+
+  // Hover highlight
+  if (showHighlight && hoveredTile >= 0 && hoveredTile !== selectedTile) {
+    const hc = hoveredTile % cols, hr = Math.floor(hoveredTile / cols);
+    ctx.fillStyle = 'rgba(0,229,176,0.18)';
+    ctx.fillRect(hc * tileW, hr * tileH, tileW, tileH);
+  }
+
+  // Selected highlight
+  if (selectedTile >= 0 && selectedTile < cols * rows) {
+    const sc = selectedTile % cols, sr = Math.floor(selectedTile / cols);
+    ctx.fillStyle = 'rgba(255,77,109,0.18)';
+    ctx.fillRect(sc * tileW, sr * tileH, tileW, tileH);
+    ctx.strokeStyle = '#ff4d6d';
+    ctx.lineWidth = Math.max(1, 1.5 / zoom);
+    ctx.strokeRect(sc * tileW + .5, sr * tileH + .5, tileW - 1, tileH - 1);
+  }
+
+  // Grid lines
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(0,229,176,0.6)';
+    ctx.lineWidth = Math.max(0.3, 0.8 / zoom);
+    for (let c = 0; c <= cols; c++) {
+      ctx.beginPath(); ctx.moveTo(c * tileW, 0); ctx.lineTo(c * tileW, rows * tileH); ctx.stroke();
+    }
+    for (let r = 0; r <= rows; r++) {
+      ctx.beginPath(); ctx.moveTo(0, r * tileH); ctx.lineTo(cols * tileW, r * tileH); ctx.stroke();
+    }
+  }
+
+  // Index labels — size adapts to tile size
+  if (showIndex) {
+    const minDim = Math.min(tileW, tileH);
+    const fontSize = Math.max(5, Math.min(minDim * 0.3, 14));
+    ctx.font = '700 ' + fontSize + 'px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const idx = r * cols + c;
+        const x = c * tileW + tileW - 2;
+        const y = r * tileH + tileH - 2;
+        ctx.fillStyle = 'rgba(0,0,0,0.72)';
+        ctx.fillText(idx, x + 1, y + 1);
+        ctx.fillStyle = idx === selectedTile ? '#ff4d6d' : idx === hoveredTile ? '#00e5b0' : 'rgba(255,255,255,0.85)';
+        ctx.fillText(idx, x, y);
+      }
+    }
+  }
+
+  document.getElementById('tileCountLabel').textContent = cols + '×' + rows + ' = ' + (cols * rows);
+  document.getElementById('sb-grid').textContent = cols + 'col × ' + rows + 'row  (' + tileW + '×' + tileH + 'px)';
+
+  buildTileList();
+  if (selectedTile >= 0) showDetail(selectedTile);
+}
+
+// ── Zoom/Pan ──
+function applyTransform() {
+  zoomWrap.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
+  const pct = Math.round(zoom * 100);
+  zoomLabel.textContent = pct + '%';
+  document.getElementById('sb-zoom').textContent = pct + '%';
+}
+
+function clampPan() {
+  // Allow canvas to be dragged but keep at least 60px visible
+  const vw = canvasArea.clientWidth;
+  const vh = canvasArea.clientHeight;
+  const cw = canvas.width  * zoom;
+  const ch = canvas.height * zoom;
+  const margin = 60;
+  panX = Math.min(vw - margin, Math.max(margin - cw, panX));
+  panY = Math.min(vh - margin, Math.max(margin - ch, panY));
+}
+
+function fitToView() {
+  const vw = canvasArea.clientWidth  - 32;
+  const vh = canvasArea.clientHeight - 32;
+  zoom = Math.min(vw / imgW, vh / imgH, 1);
+  zoom = Math.max(ZOOM_MIN, zoom);
+  panX = (canvasArea.clientWidth  - imgW * zoom) / 2;
+  panY = (canvasArea.clientHeight - imgH * zoom) / 2;
+  applyTransform();
+}
+
+function zoomAt(newZoom, cx, cy) {
+  // cx, cy = focal point in viewport coords
+  newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newZoom));
+  const scale = newZoom / zoom;
+  panX = cx - scale * (cx - panX);
+  panY = cy - scale * (cy - panY);
+  zoom = newZoom;
+  clampPan();
+  applyTransform();
+}
+
+// Mouse wheel zoom (pinch on trackpad too)
+viewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = viewport.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const delta = e.deltaY < 0 ? 1 + ZOOM_STEP : 1 - ZOOM_STEP;
+  zoomAt(zoom * delta, cx, cy);
+  // Redraw after zoom to adjust line widths
+  if (img) redraw();
+}, { passive: false });
+
+// Pan with mouse drag
+viewport.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  isPanning = true;
+  viewport.classList.add('panning');
+  panStartX = e.clientX;
+  panStartY = e.clientY;
+  panStartPX = panX;
+  panStartPY = panY;
+});
+window.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  panX = panStartPX + (e.clientX - panStartX);
+  panY = panStartPY + (e.clientY - panStartY);
+  clampPan();
+  applyTransform();
+});
+window.addEventListener('mouseup', () => {
+  isPanning = false;
+  viewport.classList.remove('panning');
+});
+
+// Touch pan/pinch
+let touches = [];
+let lastPinchDist = null;
+viewport.addEventListener('touchstart', e => {
+  touches = Array.from(e.touches);
+  if (touches.length === 1) {
+    isPanning = true;
+    panStartX = touches[0].clientX;
+    panStartY = touches[0].clientY;
+    panStartPX = panX; panStartPY = panY;
+  }
+  if (touches.length === 2) {
+    isPanning = false;
+    lastPinchDist = Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+  }
+}, { passive: true });
+viewport.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const ts = Array.from(e.touches);
+  if (ts.length === 1 && isPanning) {
+    panX = panStartPX + (ts[0].clientX - panStartX);
+    panY = panStartPY + (ts[0].clientY - panStartY);
+    clampPan(); applyTransform();
+  }
+  if (ts.length === 2 && lastPinchDist !== null) {
+    const dist = Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+    const cx = (ts[0].clientX + ts[1].clientX) / 2;
+    const cy = (ts[0].clientY + ts[1].clientY) / 2;
+    const rect = viewport.getBoundingClientRect();
+    zoomAt(zoom * (dist / lastPinchDist), cx - rect.left, cy - rect.top);
+    lastPinchDist = dist;
+    if (img) redraw();
+  }
+}, { passive: false });
+viewport.addEventListener('touchend', () => { isPanning = false; lastPinchDist = null; });
+
+// Zoom buttons
+document.getElementById('btnZoomIn').addEventListener('click', () => {
+  const cx = canvasArea.clientWidth / 2, cy = canvasArea.clientHeight / 2;
+  zoomAt(zoom * 1.3, cx, cy);
+  if (img) redraw();
+});
+document.getElementById('btnZoomOut').addEventListener('click', () => {
+  const cx = canvasArea.clientWidth / 2, cy = canvasArea.clientHeight / 2;
+  zoomAt(zoom / 1.3, cx, cy);
+  if (img) redraw();
+});
+document.getElementById('btnZoomFit').addEventListener('click', () => { fitToView(); });
+document.getElementById('btnZoom1').addEventListener('click', () => {
+  zoom = 1;
+  panX = (canvasArea.clientWidth  - imgW) / 2;
+  panY = (canvasArea.clientHeight - imgH) / 2;
+  clampPan(); applyTransform();
+  if (img) redraw();
+});
+
+// ── Click on canvas — detect tile ──
+viewport.addEventListener('click', e => {
+  if (!img || isPanning) return;
+  // figure out pixel on canvas
+  const rect = zoomWrap.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) / zoom;
+  const cy = (e.clientY - rect.top)  / zoom;
+  const c = Math.floor(cx / tileW), r = Math.floor(cy / tileH);
+  if (c >= 0 && c < cols && r >= 0 && r < rows) {
+    selectTile(r * cols + c);
+  }
+});
+
+// Prevent click firing after a pan drag
+let didPan = false;
+window.addEventListener('mousemove', () => { if (isPanning) didPan = true; });
+window.addEventListener('mousedown', () => { didPan = false; });
+viewport.addEventListener('click', e => { if (didPan) { e.stopImmediatePropagation(); } }, true);
+
+// ── Hover on canvas ──
+viewport.addEventListener('mousemove', e => {
+  if (!img || isPanning) return;
+  const rect = zoomWrap.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) / zoom;
+  const cy = (e.clientY - rect.top)  / zoom;
+  const c = Math.floor(cx / tileW), r = Math.floor(cy / tileH);
+
+  if (c >= 0 && c < cols && r >= 0 && r < rows) {
+    const idx = r * cols + c;
+    const prev = hoveredTile;
+    hoveredTile = idx;
+    if (showHighlight && prev !== idx) redraw();
+    hoverInfo.style.display = 'block';
+    hoverInfo.style.left = (e.clientX + 14) + 'px';
+    hoverInfo.style.top  = (e.clientY - 10) + 'px';
+    hoverInfo.textContent = '#' + idx + '  col:' + c + '  row:' + r + '  (' + (c*tileW) + ', ' + (r*tileH) + ')';
+    document.getElementById('sb-hover').textContent = '타일 #' + idx + '  —  col ' + c + ', row ' + r + '  /  pixel (' + (c*tileW) + ', ' + (r*tileH) + ')';
+  } else {
+    if (hoveredTile >= 0) { hoveredTile = -1; if (showHighlight) redraw(); }
+    hoverInfo.style.display = 'none';
+    document.getElementById('sb-hover').textContent = '스크롤로 확대/축소 · 드래그로 이동';
+  }
+});
+viewport.addEventListener('mouseleave', () => {
+  hoveredTile = -1;
+  hoverInfo.style.display = 'none';
+  if (showHighlight) redraw();
+  document.getElementById('sb-hover').textContent = '스크롤로 확대/축소 · 드래그로 이동';
+});
+
+// ── Tile list ──
+function buildTileList() {
+  tileListEl.innerHTML = '';
+  const total = cols * rows;
+  document.getElementById('tileListCnt').textContent = total;
+  if (total === 0) {
+    tileListEl.innerHTML = '<div style="padding:16px 8px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted);">타일 없음</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < total; i++) {
+    const c = i % cols, r = Math.floor(i / cols);
+    const item = document.createElement('div');
+    item.className = 'tile-item' + (i === selectedTile ? ' selected' : '');
+    item.dataset.idx = i;
+
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'tile-preview';
+    const pc = document.createElement('canvas');
+    pc.width = 28; pc.height = 28;
+    pc.getContext('2d').drawImage(img, c * tileW, r * tileH, tileW, tileH, 0, 0, 28, 28);
+    previewDiv.appendChild(pc);
+
+    const info = document.createElement('div');
+    info.className = 'tile-info';
+    info.innerHTML = '<div class="tile-idx">#' + i + '</div><div class="tile-pos">' + c + ',' + r + ' (' + (c*tileW) + ',' + (r*tileH) + ')</div>';
+
+    item.appendChild(previewDiv);
+    item.appendChild(info);
+    item.addEventListener('click', () => selectTile(i));
+    frag.appendChild(item);
+  }
+  tileListEl.appendChild(frag);
+}
+
+// ── Select ──
+function selectTile(idx) {
+  if (selectedTile === idx) { selectedTile = -1; hideDetail(); }
+  else { selectedTile = idx; showDetail(idx); }
+  redraw();
+  syncListSelection();
+}
+
+function syncListSelection() {
+  document.querySelectorAll('.tile-item').forEach(el => {
+    const active = parseInt(el.dataset.idx) === selectedTile;
+    el.classList.toggle('selected', active);
+    if (active) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+}
+
+// ── Detail panel ──
+function showDetail(idx) {
+  if (cols === 0) return;
+  const c = idx % cols, r = Math.floor(idx / cols);
+  const px = c * tileW, py = r * tileH;
+  detailPanel.classList.remove('hidden');
+  detailEmpty.style.display = 'none';
+  detailContent.style.display = 'flex';
+  // Zoom to fit 162×162, max 8×
+  const ratio = Math.min(162 / tileW, 162 / tileH, 8);
+  const dw = Math.max(1, Math.round(tileW * ratio));
+  const dh = Math.max(1, Math.round(tileH * ratio));
+  detailCanvas.width = dw; detailCanvas.height = dh;
+  dctx.imageSmoothingEnabled = false;
+  dctx.drawImage(img, px, py, tileW, tileH, 0, 0, dw, dh);
+  document.getElementById('d-idx').textContent   = '#' + idx;
+  document.getElementById('d-index').textContent = idx;
+  document.getElementById('d-col').textContent   = c;
+  document.getElementById('d-row').textContent   = r;
+  document.getElementById('d-px').textContent    = px;
+  document.getElementById('d-py').textContent    = py;
+  document.getElementById('d-size').textContent  = tileW + '×' + tileH;
+  document.getElementById('btnPrev').disabled = idx <= 0;
+  document.getElementById('btnNext').disabled = idx >= cols * rows - 1;
+}
+
+function hideDetail() {
+  detailPanel.classList.add('hidden');
+  detailEmpty.style.display = 'flex';
+  detailContent.style.display = 'none';
+}
+
+document.getElementById('btnPrev').addEventListener('click', () => { if (selectedTile > 0) selectTile(selectedTile - 1); });
+document.getElementById('btnNext').addEventListener('click', () => { if (selectedTile < cols * rows - 1) selectTile(selectedTile + 1); });
+document.getElementById('btnClose').addEventListener('click', () => { selectedTile = -1; hideDetail(); redraw(); syncListSelection(); });
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (!img || cols === 0) return;
+  // Zoom shortcuts (no modifier needed when not in input)
+  if (document.activeElement.tagName !== 'INPUT') {
+    if (e.key === '+' || e.key === '=') {
+      const cx = canvasArea.clientWidth/2, cy = canvasArea.clientHeight/2;
+      zoomAt(zoom * 1.25, cx, cy); redraw(); return;
+    }
+    if (e.key === '-') {
+      const cx = canvasArea.clientWidth/2, cy = canvasArea.clientHeight/2;
+      zoomAt(zoom / 1.25, cx, cy); redraw(); return;
+    }
+    if (e.key === 'f' || e.key === 'F') { fitToView(); return; }
+    if (e.key === '1') {
+      zoom = 1;
+      panX = (canvasArea.clientWidth - imgW) / 2;
+      panY = (canvasArea.clientHeight - imgH) / 2;
+      clampPan(); applyTransform(); redraw(); return;
+    }
+  }
+  if (e.key === 'Escape') { selectedTile = -1; hideDetail(); redraw(); syncListSelection(); return; }
+  if (selectedTile < 0) return;
+  const total = cols * rows;
+  let next = selectedTile;
+  if (e.key === 'ArrowRight') next = Math.min(selectedTile + 1, total - 1);
+  if (e.key === 'ArrowLeft')  next = Math.max(selectedTile - 1, 0);
+  if (e.key === 'ArrowDown')  next = Math.min(selectedTile + cols, total - 1);
+  if (e.key === 'ArrowUp')    next = Math.max(selectedTile - cols, 0);
+  if (next !== selectedTile) { e.preventDefault(); selectTile(next); }
+});
+
+// Resize → re-fit
+window.addEventListener('resize', () => { if (img) fitToView(); });
+</script>
+</body>
+</html>

@@ -86,8 +86,26 @@ textarea {
   margin: 24px 0;
 }
 
-.preview ul { padding-left: 20px; }
-.preview li { margin: 6px 0; }
+/* 기존 .preview ul 수정 및 추가 */
+.preview ul {
+  padding-left: 24px; /* 들여쓰기 간격 */
+  margin: 4px 0;
+  list-style-type: none; /* 점(bullet) 제거 원할 경우 */
+}
+
+/* 트리 구조 앞에 작은 기호나 선을 넣고 싶을 때 */
+.preview li {
+  position: relative;
+  margin: 4px 0;
+}
+
+.preview li::before {
+  content: "•"; /* 혹은 "└" 같은 기호 */
+  color: var(--accent);
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+}
 
 .preview pre {
   background: var(--code);
@@ -228,36 +246,43 @@ function parseTable(md) {
 function parseList(md) {
   const lines = md.split("\n");
   let html = "";
-  let inList = false;
+  let stack = []; // 현재 들여쓰기 단계를 저장하는 스택
 
   lines.forEach(line => {
-    if (/^- /.test(line)) {
-      if (!inList) {
+    // 1. 리스트 아이템인지 확인 (공백들 + 하이픈 + 공백)
+    const match = line.match(/^(\s*)-\s+(.*)/);
+
+    if (match) {
+      const indent = match[1].length; // 앞쪽 공백 길이
+      const content = match[2];
+
+      // 현재 들여쓰기가 이전보다 깊어지면 새로운 <ul> 시작
+      if (stack.length === 0 || indent > stack[stack.length - 1]) {
         html += "<ul>";
-        inList = true;
+        stack.push(indent);
+      } 
+      // 현재 들여쓰기가 이전보다 얕아지면 <ul> 닫기
+      else {
+        while (stack.length > 0 && indent < stack[stack.length - 1]) {
+          html += "</ul>";
+          stack.pop();
+        }
       }
-      html += `<li>${line.replace(/^- /, "")}</li>`;
-      return;
+      html += `<li>${content}</li>`;
+    } else {
+      // 리스트가 끝났을 때 모든 태그 닫기
+      while (stack.length > 0) {
+        html += "</ul>";
+        stack.pop();
+      }
+      html += line + "\n";
     }
-
-    if (inList && /^\s{2,}\S/.test(line)) {
-      html += `<div class="list-sub">${line.trim()}</div>`;
-      return;
-    }
-
-    if (inList && line.trim() === "") {
-      return;
-    }
-
-    if (inList) {
-      html += "</ul>\n"; // 👈 여기서 \n을 추가하여 다음 줄과 분리합니다.
-      inList = false;
-    }
-
-    html += line + "\n";
   });
 
-  if (inList) html += "</ul>";
+  while (stack.length > 0) {
+    html += "</ul>";
+    stack.pop();
+  }
   return html;
 }
 
