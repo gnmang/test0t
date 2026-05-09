@@ -1,400 +1,297 @@
 <!DOCTYPE html>
 <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>JSON Prettifier</title>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Prettifier Pro</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border-color: #334155;
+        }
 
-            body {
-                font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
-                background: linear-gradient(
-                    135deg,
-                    #667eea 0%,
-                    #764ba2 100%
-                );
-                min-height: 100vh;
-                padding: 20px;
-            }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            .container {
-                max-width: 1400px;
-                margin: 0 auto;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
-                border-radius: 20px;
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-                overflow: hidden;
-            }
+        body {
+            font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-            .header {
-                background: linear-gradient(
-                    45deg,
-                    #4facfe 0%,
-                    #00f2fe 100%
-                );
-                padding: 30px;
-                text-align: center;
-                color: white;
-            }
+        /* Header Section */
+        .header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+        }
 
-            .header h1 {
-                font-size: 2.5rem;
-                font-weight: 300;
-                margin-bottom: 10px;
-            }
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-            .header p {
-                opacity: 0.9;
-                font-size: 1.1rem;
-            }
+        .header-title p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
 
-            .main-content {
-                padding: 40px;
-            }
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
 
-            .input-section {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 30px;
-                margin-bottom: 30px;
-            }
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
 
-            .input-group {
-                display: flex;
-                flex-direction: column;
-            }
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #000;
+        }
 
-            .input-group label {
-                font-size: 1.1rem;
-                font-weight: 600;
-                color: #333;
-                margin-bottom: 10px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
 
-            .input-group label::before {
-                content: "📝";
-            }
+        /* Main Content */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            flex: 1;
+            gap: 1px;
+            background-color: var(--border-color);
+        }
 
-            .output-group label::before {
-                content: "✨";
-            }
+        .panel {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-            textarea {
-                width: 100%;
-                height: 350px;
-                border: 2px solid #e0e0e0;
-                border-radius: 12px;
-                padding: 20px;
-                font-family: inherit;
-                font-size: 14px;
-                line-height: 1.5;
-                resize: vertical;
-                transition: all 0.3s ease;
-                background: #fafafa;
-            }
+        .panel-header {
+            padding: 12px 20px;
+            background-color: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-            textarea:focus {
-                outline: none;
-                border-color: #4facfe;
-                box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-                background: white;
-            }
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 20px;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none; /* 크기 조절 비활성화 */
+            outline: none;
+        }
 
-            #input-json {
-                font-family: inherit;
-            }
+        .output-display {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
 
-            #output-json {
-                font-family: inherit;
-                background: #1e1e1e;
-                color: #d4d4d4;
-                border-color: #444;
-            }
+        /* Copy Button */
+        .copy-btn {
+            padding: 4px 12px;
+            background: var(--border-color);
+            color: var(--text-main);
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
 
-            .button-container {
-                text-align: center;
-                margin-bottom: 30px;
-            }
+        .copy-btn:hover {
+            background: #475569;
+        }
 
-            .convert-btn {
-                background: linear-gradient(45deg, #ff6b6b, #ffd93d);
-                color: white;
-                border: none;
-                padding: 15px 40px;
-                font-size: 1.1rem;
-                font-weight: 600;
-                border-radius: 50px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
-            }
+        /* JSON Syntax Coloring */
+        .json-key { color: #7dd3fc; }
+        .json-string { color: #fbbf24; }
+        .json-number { color: #4ade80; }
+        .json-boolean { color: #f472b6; }
+        .json-null { color: #f472b6; }
 
-            .convert-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
-            }
+        /* Error Toast */
+        #error-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ef4444;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: none;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
 
-            .convert-btn:active {
-                transform: translateY(0);
-            }
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
 
-            .error-message {
-                background: #ff4757;
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                margin: 20px 0;
-                font-weight: 500;
-                display: none;
-                animation: slideInDown 0.3s ease;
-            }
-
-            @keyframes slideInDown {
-                from {
-                    transform: translateY(-20px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
-
-            .json-syntax {
-                white-space: pre-wrap;
-                font-family: inherit;
-                line-height: 1.6;
-            }
-
-            .json-key {
-                color: #9cdcfe;
-                font-weight: 600;
-            }
-
-            .json-string {
-                color: #ce9178;
-            }
-
-            .json-number {
-                color: #b5cea8;
-            }
-
-            .json-boolean {
-                color: #569cd6;
-                font-weight: 600;
-            }
-
-            .json-null {
-                color: #569cd6;
-                font-weight: 600;
-            }
-
-            .json-punctuation {
-                color: #d4d4d4;
-            }
-
-            @media (max-width: 768px) {
-                .input-section {
-                    grid-template-columns: 1fr;
-                    gap: 20px;
-                }
-
-                .header h1 {
-                    font-size: 2rem;
-                }
-
-                .main-content {
-                    padding: 20px;
-                }
-
-                textarea {
-                    height: 250px;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>JSON Prettifier</h1>
-                <p>JSON 문자열을 예쁘게 포맷팅하고 색상을 입혀보세요</p>
-            </div>
-
-            <div class="main-content">
-                <div class="input-section">
-                    <div class="input-group">
-                        <label for="input-json">JSON 입력</label>
-                        <textarea
-                            id="input-json"
-                            placeholder='{"name": "홍길동", "age": 30, "city": "서울"}'
-                        ></textarea>
-                    </div>
-
-                    <div class="input-group output-group">
-                        <label for="output-json">포맷된 JSON</label>
-                        <textarea
-                            id="output-json"
-                            readonly
-                            placeholder="변환된 JSON이 여기에 표시됩니다..."
-                        ></textarea>
-                    </div>
-                </div>
-
-                <div class="button-container">
-                    <button class="convert-btn" onclick="convertJson()">
-                        🎨 변환하기
-                    </button>
-                </div>
-
-                <div id="error-message" class="error-message"></div>
-            </div>
+    <header class="header">
+        <div class="header-title">
+            <h1>JSON Prettifier Pro</h1>
+            <p>이사를 위한 깔끔하고 스마트한 JSON 도구</p>
         </div>
+        <div class="actions">
+            <button class="btn btn-primary" onclick="convertJson()">
+                <span>🎨</span> 변환하기
+            </button>
+        </div>
+    </header>
 
-        <script>
-            // 기존 convertJson()에 있던 출력 관련 코드를 분리한 함수
-            function displayColored(coloredHtml) {
-                const outputJson = document.getElementById(
-                    "output-json",
-                );
+    <main class="main-container">
+        <section class="panel">
+            <div class="panel-header">Input JSON</div>
+            <textarea id="input-json" placeholder='여기에 JSON을 붙여넣으세요...'></textarea>
+        </section>
 
-                // textarea 보이기/숨기기 처리
-                outputJson.style.display = "none";
+        <section class="panel">
+            <div class="panel-header">
+                Formatted Output
+                <button class="copy-btn" onclick="copyToClipboard()">복사하기</button>
+            </div>
+            <div id="output-display" class="output-display">변환된 결과가 여기에 표시됩니다...</div>
+        </section>
+    </main>
 
-                // 기존 컬러 div가 있으면 제거
-                const existingColorDiv = document.querySelector(
-                    ".colored-json",
-                );
-                if (existingColorDiv) {
-                    existingColorDiv.remove();
-                }
+    <div id="error-message"></div>
 
-                // 새로운 컬러 div 생성
-                const colorDiv = document.createElement("div");
-                colorDiv.className = "colored-json json-syntax";
-                colorDiv.innerHTML = coloredHtml;
-                colorDiv.style.cssText = `
-                    width: 100%;
-                    height: 350px;
-                    border: 2px solid #444;
-                    border-radius: 12px;
-                    padding: 20px;
-                    background: #1e1e1e;
-                    color: #d4d4d4;
-                    overflow: auto;
-                    font-family: inherit;
-                    font-size: 14px;
-                    line-height: 1.5;
-                `;
+    <script>
+        let currentFormattedJson = "";
 
-                // textarea 다음에 컬러 div 추가
-                outputJson.parentNode.insertBefore(
-                    colorDiv,
-                    outputJson.nextSibling,
-                );
+        function convertJson() {
+            const input = document.getElementById("input-json").value.trim();
+            const outputDiv = document.getElementById("output-display");
+            
+            hideError();
+
+            if (!input) {
+                showError("JSON 내용을 입력해주세요.");
+                return;
             }
 
-            function convertJson() {
-                const inputJson = document.getElementById(
-                    "input-json",
-                ).value.trim();
-                const outputJson = document.getElementById(
-                    "output-json",
-                );
-                const errorMessage = document.getElementById(
-                    "error-message",
-                );
-
-                errorMessage.style.display = "none";
-
-                if (!inputJson) {
-                    showError("JSON 문자열을 입력해주세요.");
-                    return;
-                }
-
+            try {
+                let parsed;
+                // 문자열 내에 이중으로 감싸진 경우 처리 포함
                 try {
-                    let cleaned = inputJson;
-
-                    // 첫 번째 파싱: 문자열로 감싸진 JSON인지 확인
-                    try {
-                        cleaned = JSON.parse(inputJson);
-                    } catch (e) {
-                        // 그냥 무시하고 다음 단계에서 처리
-                    }
-
-                    // 두 번째 파싱: "\n \"a2\"" 같은 구조면 다시 복구
-                    if (typeof cleaned === "string") {
-                        cleaned = JSON.parse(cleaned);
-                    }
-
-                    const formattedJson = JSON.stringify(
-                        cleaned,
-                        null,
-                        2,
-                    );
-                    const coloredJson = syntaxHighlight(
-                        formattedJson,
-                    );
-
-                    displayColored(coloredJson);
-                } catch (error) {
-                    showError(
-                        "올바르지 않은 JSON 형식입니다: " +
-                            error.message,
-                    );
+                    parsed = JSON.parse(input);
+                    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+                } catch (e) {
+                    parsed = JSON.parse(input);
                 }
+
+                currentFormattedJson = JSON.stringify(parsed, null, 2);
+                outputDiv.innerHTML = syntaxHighlight(currentFormattedJson);
+            } catch (error) {
+                showError("올바르지 않은 JSON 형식입니다: " + error.message);
             }
+        }
 
-            function syntaxHighlight(json) {
-                json = json.replace(/&/g, "&amp;").replace(
-                    /</g,
-                    "&lt;",
-                ).replace(/>/g, "&gt;");
-
-                return json.replace(
-                    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-                    function (match) {
-                        let cls = "json-number";
-                        if (/^"/.test(match)) {
-                            if (/:$/.test(match)) {
-                                cls = "json-key";
-                            } else {
-                                cls = "json-string";
-                            }
-                        } else if (/true|false/.test(match)) {
-                            cls = "json-boolean";
-                        } else if (/null/.test(match)) {
-                            cls = "json-null";
-                        }
-                        return '<span class="' + cls + '">' +
-                            match + "</span>";
-                    },
-                );
-            }
-
-            function showError(message) {
-                const errorElement = document.getElementById(
-                    "error-message",
-                );
-                errorElement.textContent = message;
-                errorElement.style.display = "block";
-            }
-
-            // Enter 키로도 변환 가능하도록
-            document.getElementById("input-json")
-                .addEventListener("keydown", function (e) {
-                    if (e.ctrlKey && e.key === "Enter") {
-                        convertJson();
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = "json-number";
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = "json-key";
+                    } else {
+                        cls = "json-string";
                     }
-                });
-        </script>
-    </body>
+                } else if (/true|false/.test(match)) {
+                    cls = "json-boolean";
+                } else if (/null/.test(match)) {
+                    cls = "json-null";
+                }
+                return `<span class="${cls}">${match}</span>`;
+            });
+        }
+
+        function copyToClipboard() {
+            if (!currentFormattedJson) {
+                showError("복사할 내용이 없습니다.");
+                return;
+            }
+            navigator.clipboard.writeText(currentFormattedJson).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = "복사 완료!";
+                btn.style.background = "#059669";
+                setTimeout(() => {
+                    btn.textContent = "복사하기";
+                    btn.style.background = "";
+                }, 2000);
+            });
+        }
+
+        function showError(msg) {
+            const err = document.getElementById("error-message");
+            err.textContent = msg;
+            err.style.display = "block";
+            setTimeout(hideError, 3000);
+        }
+
+        function hideError() {
+            document.getElementById("error-message").style.display = "none";
+        }
+
+        // 단축키 지원
+        document.addEventListener("keydown", function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                convertJson();
+            }
+        });
+    </script>
+</body>
 </html>
